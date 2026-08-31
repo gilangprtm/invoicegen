@@ -172,6 +172,27 @@
   }
 }
 
+/* Print-only invoice paper: hidden on screen, shown only when printing */
+[data-print-root] {
+  display: none;
+}
+
+@media print {
+  body > *:not([data-print-root]) {
+    display: none;
+  }
+
+  [data-print-root] {
+    display: block;
+  }
+
+  /* Hide browser default headers/footers (URL, title, page numbers) */
+  @page {
+    margin: 0;
+    size: auto;
+  }
+}
+
 .disable-transitions * {
   transition: none !important;
 }

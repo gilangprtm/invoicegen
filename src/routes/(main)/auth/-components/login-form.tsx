@@ -1,3 +1,7 @@
+"use client";
+
+import { useNavigate } from "@tanstack/react-router";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -7,22 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
 
 const formSchema = z.object({
   email: z.email({ message: "Please enter a valid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
   remember: z.boolean().optional(),
 });
-
-const onSubmit = (data: z.infer<typeof formSchema>) => {
-  toast("You submitted the following values", {
-    description: (
-      <pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
-        <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-      </pre>
-    ),
-  });
-};
 
 export function LoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
@@ -33,6 +28,29 @@ export function LoginForm() {
       remember: false,
     },
   });
+  const navigate = useNavigate();
+
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    try {
+      const result = await authClient.signIn.email({
+        email: data.email,
+        password: data.password,
+        callbackURL: "/dashboard/default",
+        rememberMe: data.remember,
+      });
+
+      if (result.error) {
+        toast.error("Login failed", { description: result.error.message });
+        return;
+      }
+
+      toast.success("Login successful", { description: "Redirecting to dashboard..." });
+      await navigate({ to: "/dashboard/default" });
+    } catch (err) {
+      console.error("Login error:", err);
+      toast.error("Login failed", { description: "An unexpected error occurred" });
+    }
+  };
 
   return (
     <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">

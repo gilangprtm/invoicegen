@@ -1,31 +1,32 @@
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { ClientSelector } from "./client-selector";
 import { InvoiceAdjustments } from "./invoice-adjustments";
 import { InvoiceDetails } from "./invoice-details";
 import { InvoiceItems } from "./invoice-items";
 
-export function InvoiceForm() {
+export function InvoiceForm({
+  currency,
+  onCurrencyChange,
+  showClientError,
+  showItemsError,
+}: {
+  currency: string;
+  onCurrencyChange: (v: string) => void;
+  showClientError?: boolean;
+  showItemsError?: boolean;
+}) {
   return (
     <div className="flex flex-col gap-4 rounded-xl border bg-card p-4">
-      <Tabs defaultValue="invoice">
-        <TabsList className="w-full">
-          <TabsTrigger value="invoice">Invoice</TabsTrigger>
-          <TabsTrigger value="payment">Payment</TabsTrigger>
-          <TabsTrigger value="business">Business</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
       <InvoiceDetails />
 
       <Separator />
 
-      <ClientSelector />
+      <ClientSelector showError={showClientError} />
 
       <Separator />
 
-      <InvoiceItems />
+      <InvoiceItems currency={currency} onCurrencyChange={onCurrencyChange} showError={showItemsError} />
 
       <Separator />
 

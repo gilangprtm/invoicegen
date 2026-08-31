@@ -13,7 +13,7 @@ import {
   type InvoiceFormValues,
 } from "./data";
 
-export function InvoicePaper({ invoice }: { invoice: InvoiceFormValues }) {
+export function InvoicePaper({ invoice, currency = "USD" }: { invoice: InvoiceFormValues; currency?: string }) {
   const taxOption = getInvoiceTaxOption(invoice);
   const discountValue = Number.isFinite(invoice.discountValue) ? invoice.discountValue : 0;
   const discountLabel = invoice.discountType === "percent" ? `Discount ${discountValue}%` : "Discount";
@@ -26,12 +26,16 @@ export function InvoicePaper({ invoice }: { invoice: InvoiceFormValues }) {
     >
       <header className="flex flex-col gap-10">
         <div className="grid grid-cols-2 items-start gap-14">
-          <svg className="size-12" viewBox="0 0 48 48" aria-hidden="true">
-            <rect width="20" height="20" rx="3" fill="currentColor" />
-            <rect x="28" width="20" height="20" rx="3" fill="currentColor" />
-            <rect y="28" width="20" height="20" rx="3" fill="currentColor" />
-            <rect x="28" y="28" width="20" height="20" rx="3" fill="currentColor" />
-          </svg>
+          {invoice.from.logoUrl ? (
+            <img src={invoice.from.logoUrl} alt="Company logo" className="size-14 rounded-md object-contain" />
+          ) : (
+            <svg className="size-12" viewBox="0 0 48 48" aria-hidden="true">
+              <rect width="20" height="20" rx="3" fill="currentColor" />
+              <rect x="28" width="20" height="20" rx="3" fill="currentColor" />
+              <rect y="28" width="20" height="20" rx="3" fill="currentColor" />
+              <rect x="28" y="28" width="20" height="20" rx="3" fill="currentColor" />
+            </svg>
+          )}
           <h2 className="text-4xl uppercase tracking-widest">Invoice</h2>
         </div>
 
@@ -70,7 +74,7 @@ export function InvoicePaper({ invoice }: { invoice: InvoiceFormValues }) {
 
       <div className="flex flex-col gap-5">
         <section className="text-sm">
-          <div className="grid grid-cols-[1fr_74px_116px_116px] bg-stone-200 px-3 py-3 font-semibold uppercase">
+          <div className="grid grid-cols-[1fr_90px_160px_160px] bg-stone-200 px-3 py-3 font-semibold uppercase">
             <span>Description</span>
             <span className="text-right">Units</span>
             <span className="text-right">Unit cost</span>
@@ -79,12 +83,12 @@ export function InvoicePaper({ invoice }: { invoice: InvoiceFormValues }) {
           {getInvoiceItems(invoice).map((item) => (
             <div
               key={item.id}
-              className="grid grid-cols-[1fr_74px_116px_116px] border-[oklch(0.86_0_0)] border-b px-3 py-4"
+              className="grid grid-cols-[1fr_90px_160px_160px] border-[oklch(0.86_0_0)] border-b px-3 py-4"
             >
               <span>{item.description}</span>
               <span className="text-right">{item.quantity}</span>
-              <span className="text-right">{formatInvoiceCurrency(item.unitPrice)}</span>
-              <span className="text-right">{formatInvoiceCurrency(getLineAmount(item))}</span>
+              <span className="text-right">{formatInvoiceCurrency(item.unitPrice, currency)}</span>
+              <span className="text-right">{formatInvoiceCurrency(getLineAmount(item), currency)}</span>
             </div>
           ))}
         </section>
@@ -94,23 +98,23 @@ export function InvoicePaper({ invoice }: { invoice: InvoiceFormValues }) {
             <div>
               <div className="flex justify-between gap-8">
                 <span>Net amount</span>
-                <span>{formatInvoiceCurrency(getInvoiceSubtotal(invoice))}</span>
+                <span>{formatInvoiceCurrency(getInvoiceSubtotal(invoice), currency)}</span>
               </div>
               <div className="flex justify-between gap-8">
                 <span>{discountLabel}</span>
-                <span>{formatInvoiceCurrency(getInvoiceDiscount(invoice))}</span>
+                <span>{formatInvoiceCurrency(getInvoiceDiscount(invoice), currency)}</span>
               </div>
               <div className="flex justify-between gap-8">
                 <span>
                   {taxOption.name} {taxOption.rate}%
                 </span>
-                <span>{formatInvoiceCurrency(getInvoiceTax(invoice))}</span>
+                <span>{formatInvoiceCurrency(getInvoiceTax(invoice), currency)}</span>
               </div>
             </div>
             <div className="border-current border-y-2 py-3">
               <div className="flex justify-between gap-8">
                 <span className="font-semibold uppercase">Balance due</span>
-                <span className="font-semibold">{formatInvoiceCurrency(getInvoiceTotal(invoice))}</span>
+                <span className="font-semibold">{formatInvoiceCurrency(getInvoiceTotal(invoice), currency)}</span>
               </div>
             </div>
           </section>
@@ -123,17 +127,26 @@ export function InvoicePaper({ invoice }: { invoice: InvoiceFormValues }) {
           <p>{invoice.from.phone}</p>
           <p>{invoice.from.website}</p>
         </div>
-        <div>
-          <p>Prepared for prompt processing.</p>
-          <p>Issued by {invoice.from.issuerName}</p>
-        </div>
       </footer>
     </article>
   );
 }
 
-function formatInvoiceCurrency(value: number) {
+function formatInvoiceCurrency(value: number, currency = "USD") {
+  const localeMap: Record<string, string> = {
+    USD: "en-US",
+    IDR: "id-ID",
+    EUR: "de-DE",
+    GBP: "en-GB",
+    JPY: "ja-JP",
+    SGD: "en-SG",
+    AUD: "en-AU",
+    MYR: "ms-MY",
+  };
+
   return formatCurrency(Number.isFinite(value) ? value : 0, {
+    currency,
+    locale: localeMap[currency] || "en-US",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });

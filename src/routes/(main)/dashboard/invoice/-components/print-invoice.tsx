@@ -5,7 +5,12 @@ import { createPortal } from "react-dom";
 import type { InvoiceFormValues } from "./data";
 import { InvoicePaper } from "./invoice-paper";
 
-export function PrintInvoice({ invoice }: { invoice: InvoiceFormValues }) {
+interface PrintInvoiceProps {
+  invoice: InvoiceFormValues;
+  currency?: string;
+}
+
+export function PrintInvoice({ invoice, currency = "USD" }: PrintInvoiceProps) {
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -16,7 +21,7 @@ export function PrintInvoice({ invoice }: { invoice: InvoiceFormValues }) {
 
   return createPortal(
     <div data-print-root>
-      <InvoicePaper invoice={invoice} />
+      <InvoicePaper invoice={invoice} currency={currency} />
     </div>,
     document.body,
   );

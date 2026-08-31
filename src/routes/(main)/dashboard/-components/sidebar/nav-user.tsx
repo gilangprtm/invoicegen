@@ -1,6 +1,9 @@
-import { CircleUser, CreditCard, EllipsisVertical, LogOut, MessageSquareDot } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { EllipsisVertical, LogOut, Settings } from "lucide-react";
+
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,18 +13,34 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
+import { authClient } from "@/lib/auth-client";
+import { getAuthSession } from "@/lib/middleware";
 import { getInitials } from "@/lib/utils";
 
-export function NavUser({
-  user,
-}: {
-  readonly user: {
-    readonly name: string;
-    readonly email: string;
-    readonly avatar: string;
-  };
-}) {
+function useUser() {
+  return useQuery({
+    queryKey: ["current-user"],
+    queryFn: async () => {
+      const session = await getAuthSession();
+      if (!session?.user) throw new Error("Not authenticated");
+      return session.user;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+export function NavUser() {
   const { isMobile } = useSidebar();
+  const navigate = useNavigate();
+  const { data: user } = useUser();
+
+  const handleSignOut = async () => {
+    await authClient.signOut();
+    await navigate({ to: "/login" });
+  };
+
+  const displayName = user?.name?.trim() ? user.name : user?.email || "User";
+  const initials = getInitials(displayName);
 
   return (
     <SidebarMenu>
@@ -35,15 +54,16 @@ export function NavUser({
               />
             }
           >
-            <Avatar className="h-8 w-8 rounded-lg grayscale">
-              <AvatarImage src={user.avatar || undefined} alt={user.name} />
-              <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
-            </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user.name}</span>
-              <span className="truncate text-muted-foreground text-xs">{user.email}</span>
+            <div className="flex items-center gap-3">
+              <Avatar className="h-8 w-8 rounded-lg grayscale">
+                <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">{displayName}</span>
+                <span className="truncate text-muted-foreground text-xs">{user?.email}</span>
+              </div>
+              <EllipsisVertical className="ml-auto size-4" />
             </div>
-            <EllipsisVertical className="ml-auto size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--anchor-width) min-w-56 rounded-lg"
@@ -53,31 +73,22 @@ export function NavUser({
           >
             <div className="flex items-center gap-2 px-2 py-1.5 text-left text-sm">
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar || undefined} alt={user.name} />
-                <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
+                <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-muted-foreground text-xs">{user.email}</span>
+                <span className="truncate font-medium">{displayName}</span>
+                <span className="truncate text-muted-foreground text-xs">{user?.email}</span>
               </div>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <CircleUser />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <MessageSquareDot />
-                Notifications
+              <DropdownMenuItem onClick={() => navigate({ to: "/dashboard/settings" })}>
+                <Settings />
+                Settings
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSignOut}>
               <LogOut />
               Log out
             </DropdownMenuItem>

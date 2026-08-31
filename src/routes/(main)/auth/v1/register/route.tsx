@@ -3,7 +3,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Command } from "lucide-react";
 
 import { RegisterForm } from "../../-components/register-form";
-import { GoogleButton } from "../../-components/social-auth/google-button";
 
 export const Route = createFileRoute("/(main)/auth/v1/register")({
   component: RegisterV1,
@@ -22,7 +21,6 @@ function RegisterV1() {
           </div>
           <div className="space-y-4">
             <RegisterForm />
-            <GoogleButton className="w-full" variant="outline" />
             <p className="text-center text-muted-foreground text-xs">
               Already have an account?{" "}
               <Link to="/auth/v1/login" className="text-primary">

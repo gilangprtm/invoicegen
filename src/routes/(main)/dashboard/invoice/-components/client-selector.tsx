@@ -1,22 +1,106 @@
+"use client";
+
+import { useRef, useState } from "react";
+
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
-import { Controller, useFormContext } from "react-hook-form";
+import { Controller, useForm, useFormContext } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { getInitials } from "@/lib/utils";
+import { createClients, getClients } from "@/server/clients";
 
-import { type InvoiceFormValues, invoiceClients } from "./data";
+import type { InvoiceFormValues } from "./data";
 
-export function ClientSelector() {
+const clientSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+  address: z.string().optional().or(z.literal("")),
+});
+
+type ClientFormData = z.infer<typeof clientSchema>;
+
+interface ClientSelectorProps {
+  showError?: boolean;
+}
+
+export function ClientSelector({ showError = false }: ClientSelectorProps) {
   const { control } = useFormContext<InvoiceFormValues>();
+  const queryClient = useQueryClient();
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const fieldRef = useRef<{ onChange: (value: { id: string; name: string; email: string; addressLines: string[]; taxId: string }) => void } | null>(null);
+
+  const { data: clientsData } = useSuspenseQuery({
+    queryKey: ["clients-list"],
+    queryFn: () => getClients(),
+  });
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ClientFormData>({
+    resolver: zodResolver(clientSchema),
+    defaultValues: { name: "", email: "", phone: "", address: "" },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: ClientFormData) =>
+      createClients({
+        data: {
+          name: data.name,
+          email: data.email || undefined,
+          phone: data.phone || undefined,
+          address: data.address || undefined,
+        },
+      }),
+    onSuccess: async (_result, variables) => {
+      toast.success("Client created");
+      await queryClient.invalidateQueries({ queryKey: ["clients-list"] });
+      const updated = await queryClient.fetchQuery({ queryKey: ["clients-list"], queryFn: () => getClients() });
+      const newClient = updated.find((c) => c.name === variables.name);
+      if (newClient && fieldRef.current) {
+        fieldRef.current.onChange({
+          id: newClient.id,
+          name: newClient.name,
+          email: newClient.email || "",
+          addressLines: newClient.address ? [newClient.address] : [],
+          taxId: "",
+        });
+      }
+      setDialogOpen(false);
+      reset();
+    },
+    onError: (err) => {
+      toast.error("Failed to create client", { description: err.message });
+    },
+  });
 
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-medium tracking-tight">Billed To</h2>
-        <Button type="button" variant="ghost" size="sm">
+        <Button type="button" variant="ghost" size="sm" onClick={() => setDialogOpen(true)}>
           <Plus data-icon="inline-start" />
           Add New Client
         </Button>
@@ -26,18 +110,29 @@ export function ClientSelector() {
         control={control}
         name="to"
         render={({ field }) => {
+          fieldRef.current = field;
           const selectedClient = field.value;
 
           return (
             <Field className="gap-1">
-              <FieldLabel className="text-xs">Client</FieldLabel>
+              <FieldLabel className="text-xs">
+                Client
+                <span className="ml-0.5 text-destructive" aria-hidden="true">
+                  *
+                </span>
+              </FieldLabel>
               <Select
                 value={selectedClient.id}
                 onValueChange={(clientId) => {
-                  const nextClient = invoiceClients.find((item) => item.id === clientId);
-
+                  const nextClient = clientsData.find((item) => item.id === clientId);
                   if (nextClient) {
-                    field.onChange(nextClient);
+                    field.onChange({
+                      id: nextClient.id,
+                      name: nextClient.name,
+                      email: nextClient.email || "",
+                      addressLines: nextClient.address ? [nextClient.address] : [],
+                      taxId: "",
+                    });
                   }
                 }}
               >
@@ -51,15 +146,15 @@ export function ClientSelector() {
                       </Avatar>
 
                       <div className="text-left text-xs">
-                        <div>{selectedClient.name}</div>
-                        <div className="text-muted-foreground">{selectedClient.email}</div>
+                        <div>{selectedClient.name || "Select client"}</div>
+                        <div className="text-muted-foreground">{selectedClient.email || ""}</div>
                       </div>
                     </div>
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent align="start" alignItemWithTrigger={false}>
                   <SelectGroup>
-                    {invoiceClients.map((clientOption) => (
+                    {clientsData.map((clientOption) => (
                       <SelectItem key={clientOption.id} value={clientOption.id}>
                         {clientOption.name}
                       </SelectItem>
@@ -67,10 +162,55 @@ export function ClientSelector() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
+              {showError && (
+                <FieldError className="text-destructive text-xs">Client is required to send invoice</FieldError>
+              )}
             </Field>
           );
         }}
       />
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Client</DialogTitle>
+            <DialogDescription>Create a new client record</DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit((data) => createMutation.mutate(data))} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="client-name">Name *</Label>
+              <Input id="client-name" {...register("name")} placeholder="Client name" />
+              {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="client-email">Email</Label>
+              <Input id="client-email" type="email" {...register("email")} placeholder="client@example.com" />
+              {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="client-phone">Phone</Label>
+              <Input id="client-phone" {...register("phone")} placeholder="+1-555-0000" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="client-address">Address</Label>
+              <Textarea id="client-address" {...register("address")} placeholder="Full address" rows={3} />
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createMutation.isPending}>
+                {createMutation.isPending ? "Creating..." : "Create Client"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

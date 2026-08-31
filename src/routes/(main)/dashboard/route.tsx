@@ -2,17 +2,12 @@ import type { CSSProperties } from "react";
 
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-import { siGithub } from "simple-icons";
-
-import { SimpleIcon } from "@/components/simple-icon";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { users } from "@/data/users";
+import { getAuthSession } from "@/lib/middleware";
 import { cn } from "@/lib/utils";
 import { getDashboardLayout } from "@/server/server-actions";
 
-import { AccountSwitcher } from "./-components/sidebar/account-switcher";
 import { AppSidebar } from "./-components/sidebar/app-sidebar";
 import { LayoutControls } from "./-components/sidebar/layout-controls";
 import { SearchDialog } from "./-components/sidebar/search-dialog";
@@ -20,6 +15,12 @@ import { ThemeSwitcher } from "./-components/sidebar/theme-switcher";
 
 export const Route = createFileRoute("/(main)/dashboard")({
   loader: () => getDashboardLayout(),
+  beforeLoad: async () => {
+    const session = await getAuthSession();
+    if (!session) {
+      throw Route.redirect({ to: "/login", search: { redirect: "/dashboard/default" } });
+    }
+  },
   component: DashboardLayout,
 });
 
@@ -49,7 +50,6 @@ function DashboardLayout() {
         <header
           className={cn(
             "flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12",
-            // Handle sticky navbar style with conditional classes so blur, background, z-index, and rounded corners remain consistent across all SidebarVariant layouts.
             "[html[data-navbar-style=sticky]_&]:sticky [html[data-navbar-style=sticky]_&]:top-0 [html[data-navbar-style=sticky]_&]:z-50 [html[data-navbar-style=sticky]_&]:overflow-hidden [html[data-navbar-style=sticky]_&]:rounded-t-[inherit] [html[data-navbar-style=sticky]_&]:bg-background/50 [html[data-navbar-style=sticky]_&]:backdrop-blur-md",
           )}
         >
@@ -65,25 +65,9 @@ function DashboardLayout() {
             <div className="flex items-center gap-2">
               <LayoutControls />
               <ThemeSwitcher />
-              <Button
-                size="icon"
-                nativeButton={false}
-                render={
-                  <a
-                    href="https://github.com/arhamkhnz/tanstack-shadcn-admin-dashboard"
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="Open GitHub repository"
-                  />
-                }
-              >
-                <SimpleIcon icon={siGithub} className="fill-primary-foreground" />
-              </Button>
-              <AccountSwitcher users={users} />
             </div>
           </div>
         </header>
-        {/* Pages can set data-content-padding="false" to render full-bleed app layouts. */}
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden p-4 has-data-[content-padding=false]:p-0 md:p-6 md:has-data-[content-padding=false]:p-0">
           <Outlet />
         </div>

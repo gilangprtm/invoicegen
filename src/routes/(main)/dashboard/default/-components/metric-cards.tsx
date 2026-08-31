@@ -1,94 +1,114 @@
-import { DollarSign, TrendingDown, TrendingUp, UserPlus, Users, Waves } from "lucide-react";
+"use client";
+
+import { useCallback, useState } from "react";
+
+import { useSuspenseQuery } from "@tanstack/react-query";
+
+import { ChevronLeft, ChevronRight, DollarSign, FileText, Target, TrendingDown, TrendingUp, Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getDashboardData } from "@/server/dashboard";
+
+function formatAmount(amount: number, currency: string): string {
+  return `${currency} ${amount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
 
 export function MetricCards() {
+  const { data } = useSuspenseQuery({
+    queryKey: ["dashboard-metrics"],
+    queryFn: () => getDashboardData(),
+  });
+
+  const formatChange = (change: number) => {
+    const sign = change >= 0 ? "+" : "";
+    return `${sign}${change.toFixed(1)}%`;
+  };
+
+  const currencies = data.totalRevenueByCurrency;
+  const [currIdx, setCurrIdx] = useState(0);
+  const prevCurr = useCallback(() => setCurrIdx((i) => (i > 0 ? i - 1 : currencies.length - 1)), [currencies.length]);
+  const nextCurr = useCallback(() => setCurrIdx((i) => (i < currencies.length - 1 ? i + 1 : 0)), [currencies.length]);
+
+  const metrics = [
+    {
+      title: "Total Revenue (Paid)",
+      value: currencies.length > 0 ? formatAmount(currencies[currIdx].total, currencies[currIdx].currency) : "$0",
+      icon: DollarSign,
+      description:
+        currencies.length > 1
+          ? `${currencies[currIdx].currency} · ${currIdx + 1} of ${currencies.length} currencies`
+          : currencies.length === 1
+            ? currencies[currIdx].currency
+            : "no data",
+      onPrev: currencies.length > 1 ? prevCurr : undefined,
+      onNext: currencies.length > 1 ? nextCurr : undefined,
+    },
+    {
+      title: "Active Clients",
+      value: data.activeClients.total.toString(),
+      change: formatChange(data.activeClients.change),
+      icon: Users,
+      changePositive: data.activeClients.change >= 0,
+      description: "with paid invoices",
+    },
+    {
+      title: "Pending Invoices",
+      value: data.pendingInvoices.total.toString(),
+      change: formatChange(data.pendingInvoices.change),
+      icon: FileText,
+      changePositive: data.pendingInvoices.change <= 0,
+      description: "draft + sent",
+    },
+    {
+      title: "Client Growth Rate",
+      value: `${data.growthRate.rate.toFixed(1)}%`,
+      change: formatChange(data.growthRate.change),
+      icon: Target,
+      changePositive: data.growthRate.change >= 0,
+      description: "active / total clients",
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs xl:grid-cols-4 dark:*:data-[slot=card]:bg-card">
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <div className="flex size-7 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
-              <DollarSign className="size-4" />
+    <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
+      {metrics.map((metric, index) => (
+        <Card key={index} className="bg-linear-to-t from-primary/5 to-card shadow-xs">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className="flex size-7 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
+                <metric.icon className="size-4" />
+              </div>
+            </CardTitle>
+            <CardDescription>{metric.title}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="font-medium text-3xl tabular-nums leading-none tracking-tight">{metric.value}</div>
+              {"change" in metric && metric.change !== undefined && (
+                <Badge variant={metric.changePositive ? "default" : "destructive"}>
+                  {metric.changePositive ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+                  {metric.change}
+                </Badge>
+              )}
             </div>
-          </CardTitle>
-          <CardDescription>Total Revenue</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="font-medium text-3xl tabular-nums leading-none tracking-tight">$1,250.00</div>
-            <Badge>
-              <TrendingUp className="size-3" />
-              +12.5%
-            </Badge>
-          </div>
-          <p className="text-muted-foreground text-sm">Visitors for the last 6 months</p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <div className="flex size-7 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
-              <UserPlus className="size-4" />
+            <div className="flex items-center gap-1">
+              <p className="text-muted-foreground text-sm">{metric.description}</p>
+              {"onPrev" in metric && metric.onPrev && (
+                <div className="ml-auto flex items-center">
+                  <Button size="icon" variant="ghost" className="size-6" onClick={metric.onPrev}>
+                    <ChevronLeft className="size-3" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="size-6" onClick={metric.onNext}>
+                    <ChevronRight className="size-3" />
+                  </Button>
+                </div>
+              )}
             </div>
-          </CardTitle>
-          <CardDescription>New Customers</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="font-medium text-3xl tabular-nums leading-none tracking-tight">1,234</div>
-            <Badge variant="destructive">
-              <TrendingDown className="size-3" />
-              -20%
-            </Badge>
-          </div>
-          <p className="text-muted-foreground text-sm">Acquisition needs attention</p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <div className="flex size-7 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
-              <Users className="size-4" />
-            </div>
-          </CardTitle>
-          <CardDescription>Active Accounts</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="font-medium text-3xl tabular-nums leading-none tracking-tight">45,678</div>
-            <Badge>
-              <TrendingUp className="size-3" />
-              +12.5%
-            </Badge>
-          </div>
-          <p className="text-muted-foreground text-sm">Engagement exceeds targets</p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <div className="flex size-7 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
-              <Waves className="size-4" />
-            </div>
-          </CardTitle>
-          <CardDescription>Growth Rate</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="font-medium text-3xl tabular-nums leading-none tracking-tight">4.5%</div>
-            <Badge>
-              <TrendingUp className="size-3" />
-              +4.5%
-            </Badge>
-          </div>
-          <p className="text-muted-foreground text-sm">Meets growth projections</p>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

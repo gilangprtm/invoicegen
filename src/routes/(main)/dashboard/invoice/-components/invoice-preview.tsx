@@ -1,12 +1,13 @@
 import * as React from "react";
 
-import { Download, Printer } from "lucide-react";
+import { Download, Loader2, Printer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 
 import { INVOICE_PAPER_HEIGHT, INVOICE_PAPER_SCALE, INVOICE_PAPER_WIDTH, type InvoiceFormValues } from "./data";
 import { InvoicePaper } from "./invoice-paper";
+import { renderInvoicePdf } from "./invoice-pdf";
 import { PrintInvoice } from "./print-invoice";
 import { useVisibleCenterPosition } from "./use-visible-center-position";
 
@@ -14,17 +15,39 @@ function handlePrint() {
   window.print();
 }
 
-export function InvoicePreview({ invoice }: { invoice: InvoiceFormValues }) {
+export function InvoicePreview({ invoice, currency = "USD" }: { invoice: InvoiceFormValues; currency?: string }) {
   const previewBodyRef = React.useRef<HTMLDivElement>(null);
   const paperLayout = useVisibleCenterPosition(previewBodyRef, {
     height: INVOICE_PAPER_HEIGHT,
     maxScale: INVOICE_PAPER_SCALE,
     width: INVOICE_PAPER_WIDTH,
   });
+  const [isDownloading, setIsDownloading] = React.useState(false);
+
+  const handleDownloadPdf = React.useCallback(async () => {
+    if (isDownloading) return;
+    setIsDownloading(true);
+    try {
+      const blob = await renderInvoicePdf(invoice, currency);
+      const fileName = `${invoice.referenceNumber || "invoice"}.pdf`;
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(url);
+    } catch {
+      // PDF generation failed silently — user can retry
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [invoice, currency, isDownloading]);
 
   return (
     <>
-      <PrintInvoice invoice={invoice} />
+      <PrintInvoice invoice={invoice} currency={currency} />
       <div className="flex flex-col rounded-xl border bg-card">
         <div className="flex items-center justify-between px-4 py-4">
           <h2 className="font-medium text-lg">Preview</h2>
@@ -33,9 +56,18 @@ export function InvoicePreview({ invoice }: { invoice: InvoiceFormValues }) {
               <Printer data-icon="inline-start" />
               Print
             </Button>
-            <Button type="button" variant="outline">
-              <Download data-icon="inline-start" />
-              Download PDF
+            <Button type="button" variant="outline" onClick={handleDownloadPdf} disabled={isDownloading}>
+              {isDownloading ? (
+                <>
+                  <Loader2 data-icon="inline-start" className="animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Download data-icon="inline-start" />
+                  Download PDF
+                </>
+              )}
             </Button>
           </ButtonGroup>
         </div>
@@ -65,7 +97,7 @@ export function InvoicePreview({ invoice }: { invoice: InvoiceFormValues }) {
               style={{ transform: `scale(${paperLayout?.scale ?? INVOICE_PAPER_SCALE})` }}
               className="origin-top-left"
             >
-              <InvoicePaper invoice={invoice} />
+              <InvoicePaper invoice={invoice} currency={currency} />
             </div>
           </div>
         </div>

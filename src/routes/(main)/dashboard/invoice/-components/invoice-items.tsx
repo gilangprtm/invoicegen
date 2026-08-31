@@ -20,11 +20,18 @@ import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn, formatCurrency } from "@/lib/utils";
 
 import { getLineAmount, type InvoiceFormValues, type InvoiceLineItem } from "./data";
 
-export function InvoiceItems() {
+interface InvoiceItemsProps {
+  currency: string;
+  onCurrencyChange: (v: string) => void;
+  showError?: boolean;
+}
+
+export function InvoiceItems({ currency, onCurrencyChange, showError = false }: InvoiceItemsProps) {
   const { control, register } = useFormContext<InvoiceFormValues>();
   const { append, fields, move, remove } = useFieldArray({
     control,
@@ -41,11 +48,9 @@ export function InvoiceItems() {
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-
     const oldIndex = fields.findIndex((field) => field.id === active.id);
     const newIndex = fields.findIndex((field) => field.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
-
     move(oldIndex, newIndex);
   }
 
@@ -57,10 +62,29 @@ export function InvoiceItems() {
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-medium tracking-tight">Invoice Items</h2>
-        <Button type="button" variant="ghost" size="sm" onClick={handleAddItem}>
-          <Plus data-icon="inline-start" />
-          Add Item
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select value={currency} onValueChange={(v) => v && onCurrencyChange(v)}>
+            <SelectTrigger className="h-8 w-[90px] text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="USD">USD ($)</SelectItem>
+                <SelectItem value="IDR">IDR (Rp)</SelectItem>
+                <SelectItem value="EUR">EUR (€)</SelectItem>
+                <SelectItem value="GBP">GBP (£)</SelectItem>
+                <SelectItem value="SGD">SGD (S$)</SelectItem>
+                <SelectItem value="MYR">MYR (RM)</SelectItem>
+                <SelectItem value="JPY">JPY (¥)</SelectItem>
+                <SelectItem value="AUD">AUD (A$)</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <Button type="button" variant="ghost" size="sm" onClick={handleAddItem}>
+            <Plus data-icon="inline-start" />
+            Add Item
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -90,11 +114,21 @@ export function InvoiceItems() {
                   item={items[index]}
                   register={register}
                   onRemove={() => remove(index)}
+                  currency={currency}
                 />
               ))}
             </div>
           </SortableContext>
         </DndContext>
+
+        {showError && fields.length === 0 && (
+          <p className="mt-1 text-destructive text-xs">At least one line item is required to send invoice</p>
+        )}
+        {showError && fields.length > 0 && (
+          <p className="mt-1 text-destructive text-xs">
+            Each item must have a description and valid quantity &amp; price
+          </p>
+        )}
       </div>
     </section>
   );
@@ -106,12 +140,14 @@ function SortableInvoiceItemRow({
   item,
   register,
   onRemove,
+  currency,
 }: {
   id: string;
   index: number;
   item?: InvoiceLineItem;
   register: UseFormRegister<InvoiceFormValues>;
   onRemove: () => void;
+  currency: string;
 }) {
   const { attributes, isDragging, listeners, setActivatorNodeRef, setNodeRef, transform, transition } = useSortable({
     id,
@@ -162,7 +198,7 @@ function SortableInvoiceItemRow({
       />
       <div className="min-w-0 text-right font-medium text-sm max-md:col-span-3 max-md:col-start-2 max-md:row-start-3 max-md:flex max-md:items-center max-md:justify-between max-md:text-left">
         <span className="hidden text-muted-foreground max-md:inline">Line total</span>
-        <span>{formatInvoiceCurrency(getLineAmount(item))}</span>
+        <span>{formatInvoiceCurrency(getLineAmount(item), currency)}</span>
       </div>
       <Button
         type="button"
@@ -178,8 +214,21 @@ function SortableInvoiceItemRow({
   );
 }
 
-function formatInvoiceCurrency(value: number) {
+export function formatInvoiceCurrency(value: number, currency = "USD") {
+  const localeMap: Record<string, string> = {
+    USD: "en-US",
+    IDR: "id-ID",
+    EUR: "de-DE",
+    GBP: "en-GB",
+    JPY: "ja-JP",
+    SGD: "en-SG",
+    AUD: "en-AU",
+    MYR: "ms-MY",
+  };
+
   return formatCurrency(Number.isFinite(value) ? value : 0, {
+    currency,
+    locale: localeMap[currency] || "en-US",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });

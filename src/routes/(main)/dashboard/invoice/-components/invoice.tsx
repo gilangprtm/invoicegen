@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 
 import { defaultInvoiceValues, type InvoiceFormValues } from "./data";
@@ -5,6 +7,7 @@ import { InvoiceForm } from "./invoice-form";
 import { InvoicePreview } from "./invoice-preview";
 
 export function Invoice() {
+  const [currency, setCurrency] = useState("USD");
   const form = useForm<InvoiceFormValues>({
     defaultValues: defaultInvoiceValues,
   });
@@ -13,7 +16,7 @@ export function Invoice() {
   return (
     <FormProvider {...form}>
       <form className="grid gap-5 xl:grid-cols-2" noValidate onSubmit={(event) => event.preventDefault()}>
-        <InvoiceForm />
+        <InvoiceForm currency={currency} onCurrencyChange={setCurrency} />
         <InvoicePreview invoice={invoice} />
       </form>
     </FormProvider>
