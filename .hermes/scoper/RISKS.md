@@ -1,39 +1,25 @@
-# RISKS.md
-
-## R1 — Invoice Number Race Condition (Medium)
-
-**Risk:** Two concurrent `createInvoice` calls can generate the same `INV-YYYY-NNN` for the same user.  
-**Mitigation:** Unique composite index on `invoices(user_id, number)`. App-level retry (up to 3 attempts) on unique constraint violation.  
-**Owner:** Builder (Phase 2, TASK-010).
-
 ---
 
-## R2 — PDF Generation Fidelity (Low)
+# Cycle 3 — Dashboard
 
-**Risk:** `@react-pdf/renderer` may not perfectly match `InvoicePaper` visual output (fonts, spacing, Tailwind classes).  
-**Mitigation:** Test with real invoice data; adjust PDF component to mirror `InvoicePaper`.  
-**Owner:** Builder (Phase 2, TASK-012).
+Tanggal: 2026-08-31
 
----
+Status: In Progress
 
-## R3 — Client Delete Breaks Existing Invoices (Low)
+## New Risks
 
-**Risk:** If a user tries to delete a client that has invoices, the server returns an error. UI must communicate this clearly.  
-**Mitigation:** Toast notification with explanation; disable delete button in client list if invoices exist (optional enhancement).  
-**Owner:** Builder (Phase 3, TASK-015).
+### R10 — Revenue Misleading
 
----
+Risk: chart/statistik menampilkan angka yang tidak akurat (mencampur status, salah rentang, atau menganggap draft sebagai pendapatan).
 
-## R4 — Build/Lint/Check Diagnostics (Low)
+Mitigation: definisikan revenue = invoice berstatus paid, rentang 6 bulan terakhir, label sumbu jelas, dan tampilkan angka aktual tanpa klaim.
 
-**Risk:** Existing diagnostics (30 lint errors, 290 check errors) may hide new issues after changes.  
-**Mitigation:** Fix all existing diagnostics in Phase 1 before starting Phase 2. Run `npm run lint` and `npm run check` after every ticket.  
-**Owner:** Builder (Phases 0-1).
+Owner: Builder.
 
----
+### R11 — Dashboard Menjadi Template Slop
 
-## R5 — No `.env` File in Repo (Medium)
+Risk: halaman dashboard meniru template admin generik (chart dekoratif, angka tanpa sumber, tombol tidak berfungsi).
 
-**Risk:** New contributors won't know what env vars are required.  
-**Mitigation:** `.env.example` created (TASK-002). `src/db/index.ts` throws clear error if `DATABASE_URL` missing (TASK-003).  
-**Owner:** Builder (Phase 0).
+Mitigation: setiap angka berasal dari local store; tidak ada data dummy; chart hanya bila mendukung pemahaman; empty state jelas; tombol navigasi berfungsi.
+
+Owner: Builder.

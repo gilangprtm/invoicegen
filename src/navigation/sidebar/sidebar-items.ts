@@ -1,13 +1,4 @@
-import {
-  Calendar,
-  CheckSquare,
-  Kanban,
-  LayoutDashboard,
-  type LucideIcon,
-  ReceiptText,
-  Settings,
-  Users,
-} from "lucide-react";
+import { LayoutDashboard, type LucideIcon, ReceiptText, Settings, Users } from "lucide-react";
 
 import type { FileRoutesByTo } from "@/routeTree.gen";
 
@@ -58,9 +49,10 @@ export const sidebarItems: NavGroup[] = [
       {
         id: "dashboard",
         title: "Dashboard",
-        url: "/dashboard/default",
+        url: "/dashboard",
         icon: LayoutDashboard,
       },
+
       {
         id: "invoices",
         title: "Invoices",
@@ -72,30 +64,6 @@ export const sidebarItems: NavGroup[] = [
         title: "Clients",
         url: "/dashboard/clients",
         icon: Users,
-      },
-    ],
-  },
-  {
-    id: 2,
-    label: "Organization",
-    items: [
-      {
-        id: "kanban",
-        title: "Kanban",
-        url: "/dashboard/kanban",
-        icon: Kanban,
-      },
-      {
-        id: "tasks",
-        title: "Tasks",
-        url: "/dashboard/tasks",
-        icon: CheckSquare,
-      },
-      {
-        id: "calendar",
-        title: "Calendar",
-        url: "/dashboard/calendar",
-        icon: Calendar,
       },
       {
         id: "settings",

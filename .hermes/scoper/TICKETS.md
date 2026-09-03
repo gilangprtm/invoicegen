@@ -1,173 +1,341 @@
-# TICKETS.md — InvoiceGen Implementation Plan
+# InvoiceGen — Implementation Plan (Cycle 2)
 
-All tickets use the lifecycle: `Todo → Ready → In Progress → Code Review → Done` (or `Blocked`).
+Lifecycle: `Todo → In Progress → Done` (atau `Blocked`).
 
-## Phase 0
+Semua ticket mengikuti `SPEC.md` (F1–F9), `DECISIONS.md`, dan `RISKS.md` aktif. Cycle 1 server-backed sudah digantikan; jangan mengerjakan requirement lama.
 
-### TASK-001
-- **Title:** Add missing dependency @tanstack/react-query
-- **Description:** Add `@tanstack/react-query` to package.json dependencies (imported by multiple files but not declared). Run `npm i @tanstack/react-query` to update lockfile.
-- **Assignee:** builder
-- **Priority:** 1
-- **Depends On:** None
-- **Status:** Done
-- **Started At:** 2026-08-06
-- **Completed At:** 2026-08-06
-- **Progress Log:** Dependency already present — `^5.101.4` in package.json, lockfile refs, node_modules install verified (exports `useQuery`). No code change required.
+## Phase 1 — Core Local-First Foundation
 
-### TASK-002
-- **Title:** Create .env.example
-- **Description:** Add `.env.example` at repo root documenting required env vars. Include `DATABASE_URL=` (PostgreSQL connection string) and any other vars referenced by the app. No secrets committed.
-- **Assignee:** builder
-- **Priority:** 1
-- **Depends On:** None
-- **Status:** Done
-- **Started At:** 2026-08-06
-- **Completed At:** 2026-08-06
-- **Progress Log:** File already existed but contained stale vars (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NEXT_PUBLIC_BETTER_AUTH_URL, SENTRY_DSN). Code only uses `DATABASE_URL` (src/db/index.ts:6-10), and Better Auth auto-reads `BETTER_AUTH_SECRET`/`BETTER_AUTH_URL`. Cleaned .env.example to only required vars.
+### TASK-001 — Local-first store (profile, clients, invoices, items, preferences)
 
-### TASK-003
-- **Title:** Remove hardcoded DB fallback connection string
-- **Description:** In `src/db/index.ts`, replace the hardcoded fallback `postgresql://postgres:***@localhost:5432/invoicegen` with a check that throws a clear error when `process.env.DATABASE_URL` is missing.
-- **Assignee:** builder
-- **Priority:** 1
-- **Depends On:** TASK-001, TASK-002
-- **Status:** Done
-- **Started At:** 2026-08-06
-- **Completed At:** 2026-08-06
-- **Progress Log:** Already implemented. `src/db/index.ts:6-8` throws `"DATABASE_URL environment variable is not set"` when missing. No hardcoded fallback present.
+- Status: Done
+- Depends On: None
+- Priority: P0
 
-### TASK-004
-- **Title:** Remove Google social provider from Better Auth
-- **Description:** In `src/lib/auth.ts`, remove the `socialProviders.google` block entirely. Keep `emailAndPassword: { enabled: true }` and the `tanstackStartCookies` plugin. This makes auth username/password only and removes GOOGLE_CLIENT_ID/SECRET env requirements.
-- **Assignee:** builder
-- **Priority:** 1
-- **Depends On:** TASK-001, TASK-003
-- **Status:** Done
-- **Started At:** 2026-08-06
-- **Completed At:** 2026-08-06
-- **Progress Log:** Already implemented. `src/lib/auth.ts` has no `socialProviders.google` block — only `emailAndPassword: { enabled: true }` + `tanstackStartCookies()` plugin. No Google refs anywhere in src/lib or src/server.
+Description:
+Implement browser storage persistence untuk company profile, clients, invoices, invoice items, dan preferences dengan ID stabil dan SSR-safe access. Core route tidak boleh mengimpor server business functions/auth/db.
 
-### TASK-005
-- **Title:** Remove Google button from login/register UI
-- **Description:** Remove or stub the Google social login button from the auth screens: `src/routes/(main)/auth/-components/social-auth/google-button.tsx` and its usage in login/register forms. Login and register must show only email + password form.
-- **Assignee:** builder
-- **Priority:** 1
-- **Depends On:** TASK-004
-- **Status:** Done
-- **Started At:** 2026-08-06
-- **Completed At:** 2026-08-06
-- **Progress Log:** No Google button exists. `src/routes/(main)/auth/-components/` contains only `login-form.tsx` and `register-form.tsx` — both email+password only. No `social-auth/` directory, no Google refs anywhere in auth routes. Already clean.
+Acceptance Criteria:
+- [x] Store menyediakan get/set/create/update/delete untuk profile, clients, invoices, items.
+- [x] Data bertahan setelah reload.
+- [x] Hydration-safe (tidak error di SSR).
+- [x] Tidak ada import auth/db/server di core route.
 
-## Phase 1
+### TASK-002 — Hapus auth guard dari core app
 
-### TASK-006
-- **Title:** Fix `as any` cast in invoice list query
-- **Description:** In `src/routes/(main)/dashboard/invoice/index.tsx` the `useInvoicesQuery` calls `getInvoices({ data: { page, limit, status } as any })`. Remove the `as any` and pass a properly typed validator input matching the server fn's Zod schema.
-- **Assignee:** builder
-- **Priority:** 2
-- **Depends On:** TASK-001
+- Status: Done
+- Depends On: TASK-001
+- Priority: P0
 
-### TASK-007
-- **Title:** Fix getInvoice call shape in invoice-form-page
-- **Description:** In `src/routes/(main)/dashboard/invoice/-components/invoice-form-page.tsx` line ~66, `getInvoice({ id: invoiceId })` is wrong; server fn expects `getInvoice({ data: { id } })`. Fix the call and its typing.
-- **Assignee:** builder
-- **Priority:** 2
-- **Depends On:** TASK-001
+Description:
+Root route membuka app tanpa redirect ke login. Hapus/pindahkan session guard dan UI login/register dari core flow.
 
-### TASK-008
-- **Title:** Fix duplicate and incorrect imports in invoice-form-page
-- **Description:** In `src/routes/(main)/dashboard/invoice/-components/invoice-form-page.tsx`, the import from `@/server/invoices` includes `getInvoices, createInvoice, updateInvoice, getInvoice, getClients` — `getClients` and `getInvoices` are not exported there (they live in `@/server/clients`). Clean imports: only what is actually used; `getClients` comes from `@/server/clients`.
-- **Assignee:** builder
-- **Priority:** 2
-- **Depends On:** TASK-001
+Acceptance Criteria:
+- [x] Root route tidak me-redirect ke login.
+- [x] Tidak ada route guard yang memblokir core app.
+- [x] Tidak ada button Google/social login di core app.
 
-### TASK-009
-- **Title:** Run lint and check, fix remaining diagnostics
-- **Description:** After TASK-006..008 and TASK-001, run `npm run lint` (target: 0 errors) and `npm run check` (target: 0 TypeScript errors). Fix any remaining errors related to the invoice/client/auth scope. Do NOT fix unrelated formatter noise in legacy screens. If out-of-scope errors remain, note them in a comment and stop.
-- **Assignee:** builder
-- **Priority:** 2
-- **Depends On:** TASK-006, TASK-007, TASK-008
+### TASK-003 — Invoice list/create/view/edit/delete dari store lokal
 
-## Phase 2
+- Status: Done
+- Depends On: TASK-001
+- Priority: P0
 
-### TASK-010
-- **Title:** Add unique constraint on invoice number
-- **Description:** Add Drizzle migration creating a unique index on `invoices(user_id, number)`. Update `getNextInvoiceNumber` in `src/server/invoices.ts` to retry on unique violation (up to 3 attempts) so concurrent creates cannot collide.
-- **Assignee:** builder
-- **Priority:** 2
-- **Depends On:** TASK-003, TASK-009
+Description:
+Sambungkan halaman invoice ke store lokal untuk list, create, view, edit, delete, dan status workflow.
 
-### TASK-011
-- **Title:** Make tax editable per invoice
-- **Description:** Replace the hardcoded `invoiceTaxOptions` preset-only dropdown with an editable tax rate: in `src/routes/(main)/dashboard/invoice/-components/data.ts` and `invoice-adjustments.tsx`, allow the user to enter a custom tax label + rate (%). Keep existing presets (GST 18%, VAT 12%, Service 10%, No Tax 0%) as quick-pick suggestions. Ensure the chosen rate flows into `getInvoiceTax`/`getInvoiceTotal`, the preview, the PDF, and `tax_rate` on the stored invoice.
-- **Assignee:** builder
-- **Priority:** 2
-- **Depends On:** TASK-009
+Acceptance Criteria:
+- [x] List invoice dari local store.
+- [x] Create invoice menyimpan ke local store.
+- [x] View dan edit membaca/menyimpan local store.
+- [x] Delete hanya untuk draft.
+- [x] Status transition mengikuti workflow; invalid ditolak.
 
-### TASK-012
-- **Title:** Wire Download PDF button (local, client-side)
-- **Description:** Add a client-side PDF generation capability. Recommended: `@react-pdf/renderer` (add to package.json). Create a utility that renders the invoice (mirroring `InvoicePaper`) to a PDF blob, then trigger download named `{invoice.number}.pdf`. Hook it to the `Download PDF` button in `src/routes/(main)/dashboard/invoice/-components/invoice-preview.tsx`. Must work offline — no server call.
-- **Assignee:** builder
-- **Priority:** 2
-- **Depends On:** TASK-011
+### TASK-004 — Client management lokal
 
-### TASK-013
-- **Title:** Verify print still works after PDF changes
-- **Description:** Confirm the existing print path (`PrintInvoice` portal + `InvoicePaper` + print CSS) still renders correctly after PDF work. No regressions to the on-screen preview.
-- **Assignee:** builder
-- **Priority:** 2
-- **Depends On:** TASK-012
+- Status: Done
+- Depends On: TASK-001
+- Priority: P0
 
-## Phase 3
+Description:
+Client list/create/edit/delete memakai local store; tolak delete jika client direferensikan invoice; client selector pada invoice memakai data lokal.
 
-### TASK-014
-- **Title:** Wire Add New Client button in invoice selector
-- **Description:** The `Add New Client` button in `src/routes/(main)/dashboard/invoice/-components/client-selector.tsx` currently has no onClick. Wire it to create a client (modal or navigation to the clients create screen), then refresh the clients query (`clients-list`) and auto-select the new client in the invoice form.
-- **Assignee:** builder
-- **Priority:** 2
-- **Depends On:** TASK-009
+Acceptance Criteria:
+- [x] Client CRUD local.
+- [x] Delete client dengan invoice ditolak.
+- [x] Invoice form memilih client dari local store.
+- [x] Menambah client dari invoice flow.
 
-### TASK-015
-- **Title:** Client delete guard when invoices exist
-- **Description:** In `src/server/clients.ts`, `deleteClient` must reject deletion when the client has invoices (FK is restrict). Return a clear error message. Update client list UI to surface the toast error. Verify no orphaned references.
-- **Assignee:** builder
-- **Priority:** 2
-- **Depends On:** TASK-014
+### TASK-005 — Company profile lokal
 
-### TASK-016
-- **Title:** Verify client revenue uses paid invoices only
-- **Description:** Confirm `getClients` in `src/server/clients.ts` filters revenue by `invoices.status = 'paid'` (already implemented with FILTER clause). Verify in dev with mixed-status data. No code change expected unless bug found.
-- **Assignee:** builder
-- **Priority:** 3
-- **Depends On:** TASK-015
+- Status: Done
+- Depends On: TASK-001
+- Priority: P1
 
-## Phase 4
+Description:
+Company profile (nama, email, phone, website, address, tax ID, payment details, logo bila ada) disimpan lokal dan dipakai preview/print/PDF.
 
-### TASK-017
-- **Title:** Full integration smoke test
-- **Description:** Manual end-to-end run: register → login → set company profile → create client → create invoice (draft) → edit → mark sent → mark paid → delete a draft → download PDF → print. Verify route guards, status workflow, ownership isolation, and no console errors.
-- **Assignee:** builder
-- **Priority:** 1
-- **Depends On:** TASK-012, TASK-013, TASK-016
+Acceptance Criteria:
+- [x] Profile dapat di-set dan diedit.
+- [x] Profile muncul di preview/print/PDF.
+- [x] Invoice tetap dapat dibuat tanpa profile lengkap.
 
-### TASK-018
-- **Title:** Final lint, check, and build gate
-- **Description:** Run `npm run lint` (0 errors), `npm run check` (0 TypeScript errors), `npm run build` (success). Record results in the ticket. If all pass, implementation is done.
-- **Assignee:** builder
-- **Priority:** 1
-- **Depends On:** TASK-017
+### TASK-006 — Invoice number lokal
 
-## References
+- Status: Done
+- Depends On: TASK-003
+- Priority: P1
 
-- SPEC.md — full functional/non-functional requirements and acceptance criteria
-- DECISIONS.md — architectural decisions (auth, tax, PDF, uniqueness, client delete)
-- RISKS.md — known risks and mitigations
-- PROJECT.md — project overview and scope
+Description:
+Nomor invoice `INV-{YYYY}-{NNN}` dihitung dari dataset lokal; cegah duplikasi.
+
+Acceptance Criteria:
+- [x] Nomor terisi otomatis.
+- [x] Format `INV-{YYYY}-{NNN}`.
+- [x] Tidak duplikat dalam dataset lokal.
+
+### TASK-007 — Tax dan discount editable
+
+- Status: Done
+- Depends On: TASK-003
+- Priority: P1
+
+Description:
+Tax label dan rate dapat diedit per invoice; preset quick-pick boleh tetap ada. Discount dan perhitungan konsisten di form/preview/print/PDF.
+
+Acceptance Criteria:
+- [x] Custom tax label+rate disimpan per invoice.
+- [x] Preset quick-pick opsional.
+- [x] Perhitungan subtotal/discount/tax/total konsisten.
+
+### TASK-008 — PDF dan print lokal
+
+- Status: Done
+- Depends On: TASK-003
+- Priority: P1
+
+Description:
+PDF download berjalan client-side; print memakai browser dialog; file PDF bernama `{invoice.number}.pdf`; output memuat data core.
+
+Acceptance Criteria:
+- [x] Tombol Download PDF menghasilkan file.
+- [x] PDF dapat dibuka dan berisi data client/profile/items/total.
+- [x] Print tetap berfungsi.
+
+### TASK-009 — Export/import JSON
+
+- Status: Done
+- Depends On: TASK-001
+- Priority: P0
+
+Description:
+Export seluruh dataset lokal ke file JSON dengan schema version; import memvalidasi sebelum mengganti dataset; import invalid tidak merusak data aktif; UI menjelaskan local-only + backup.
+
+Acceptance Criteria:
+- [x] Export menghasilkan file JSON berisi dataset.
+- [x] Import memvalidasi version/shape.
+- [x] Import invalid tidak mengubah data aktif.
+- [x] UI menjelaskan data tersimpan lokal dan saran export.
+
+## Phase 2 — Cleanup dan Verifikasi
+
+### TASK-010 — Audit server/auth/db imports dari core
+
+- Status: Done
+- Depends On: TASK-003
+- Priority: P1
+
+Description:
+Pastikan core app tidak membutuhkan auth/DB/server function. Hapus/isolasi file server, db, dan auth bila tidak dipakai core.
+
+Acceptance Criteria:
+- [x] Core routes tidak import `@/server`, `@/db`, atau Better Auth.
+- [x] Tidak ada `DATABASE_URL` dibutuhkan saat runtime.
+- [x] Tidak ada data invoice dikirim ke API.
+
+### TASK-011 — Hapus/sembunyikan modul template non-core
+
+- Status: Done
+- Depends On: TASK-010
+- Priority: P2
+
+Description:
+Modul seperti CRM, analytics, mail, chat, kanban, calendar, roles, dan legacy screens tidak mendukung invoice. Hapus atau sembunyikan dari navigasi.
+
+Acceptance Criteria:
+- [x] Navigasi hanya menampilkan modul yang relevan.
+- [x] Build tetap sukses.
+- [x] Tidak ada dead link.
+
+### TASK-012 — Build, check, lint, dan manual smoke test
+
+- Status: Blocked
+- Blocker: `npm run build` dan `npm test` sukses. `npm run check` masih gagal dengan baseline formatter diagnostics akibat line ending CRLF/LF dan file legacy; manual browser smoke test belum dilakukan.
+- Depends On: TASK-009, TASK-010, TASK-011
+- Priority: P0
+
+Description:
+Jalankan `npm run check` dan `npm run build`. Lakukan manual smoke test acceptance SPEC.
+
+Acceptance Criteria:
+- [ ] `npm run check` sukses.
+- [ ] `npm run build` sukses.
 
 ## Handoff Notes
 
-- Server functions and DB schema already exist; work is wiring, bug fixes, and small additions.
-- No new routes needed — routes already registered in `sidebar-items.ts` and `routeTree.gen.ts`.
-- PDF generation is the only new dependency; prefer `@react-pdf/renderer` to match `InvoicePaper` visually.
-- Builder must never modify requirement/description/priority/dependencies/phase/scope fields.
+- Pertahankan UI invoice, preview, print, dan PDF bila aman.
+- Prioritas: core invoice flow > backup > cleanup > polish.
+- Jangan menjalankan migration atau seed.
+- Jangan membaca/commit `.env`, `cookies*.txt`, `smoke.jar`.
+- Jangan push ke remote kecuali diminta eksplisit.
+- Sumber kebenaran: SPEC.md, DECISIONS.md, RISKS.md, PROJECT.md.
+
+---
+
+# Cycle 3 — Dashboard
+
+Lifecycle: `Todo → In Progress → Done` (atau `Blocked`).
+
+Ticket mengikuti SPEC Cycle 3 (F10–F15) dan keputusan D11–D15. TASK-001..012 tetap menjadi riwayat Cycle 2 yang sudah diverifikasi.
+
+## Phase 3 — Dashboard
+
+### TASK-013 — Dashboard route and navigation
+
+- **Priority:** P0
+- **Status:** Done
+- **Phase:** 3
+- **Depends On:** TASK-012
+- **Blocks:** TASK-014, TASK-015, TASK-016, TASK-017
+
+**Description:**
+Jadikan `/dashboard` halaman dashboard nyata. Tambahkan item Dashboard pada sidebar dengan tujuan `/dashboard`; pertahankan item Invoices menuju `/dashboard/invoice`. Hapus redirect lama dari dashboard.
+
+**Acceptance Criteria:**
+- [x] `/dashboard` dapat dibuka tanpa redirect.
+- [x] Sidebar memiliki Dashboard menuju `/dashboard`.
+- [x] Invoices tetap menuju `/dashboard/invoice`.
+- [x] Tidak ada dead link.
+
+---
+
+### TASK-014 — Dashboard summary and status breakdown
+
+- **Priority:** P0
+- **Status:** Done
+- **Phase:** 3
+- **Depends On:** TASK-013
+- **Blocks:** TASK-017
+
+**Description:**
+Tampilkan ringkasan total invoice, unpaid total, paid total, jumlah draft, serta jumlah invoice per status draft/sent/paid/overdue. Semua nilai memakai dataset lokal.
+
+**Acceptance Criteria:**
+- [x] Total invoice sesuai jumlah data lokal.
+- [x] Unpaid hanya menjumlah invoice yang belum paid.
+- [x] Paid hanya menjumlah invoice berstatus paid.
+- [x] Jumlah draft sesuai data lokal.
+- [x] Breakdown menampilkan draft, sent, paid, dan overdue.
+- [x] Tidak ada angka dummy.
+- [x] Empty state jelas saat dataset kosong.
+
+---
+
+### TASK-015 — Paid revenue six-month view
+
+- **Priority:** P1
+- **Status:** Done
+- **Phase:** 3
+- **Depends On:** TASK-014
+- **Blocks:** TASK-017
+
+**Description:**
+Tampilkan revenue per bulan untuk enam bulan kalender terakhir. Revenue hanya berasal dari invoice berstatus paid; bulan tanpa revenue tetap tampil dengan nilai nol.
+
+**Acceptance Criteria:**
+- [x] Menampilkan enam bulan kalender terakhir.
+- [x] Invoice paid masuk ke bulan berdasarkan tanggal invoice.
+- [x] Invoice draft, sent, dan overdue tidak masuk revenue.
+- [x] Bulan tanpa paid invoice tetap tampil.
+- [x] Label periode dan nilai terbaca.
+- [x] Empty state tampil bila tidak ada revenue paid.
+- [x] Tidak ada data dummy.
+
+---
+
+### TASK-016 — Recent invoices and clients
+
+- **Priority:** P1
+- **Status:** Done
+- **Phase:** 3
+- **Depends On:** TASK-013
+- **Blocks:** TASK-017
+
+**Description:**
+Tampilkan maksimal delapan invoice terbaru dan maksimal delapan client terbaru. Sediakan informasi inti dan link nyata ke detail/list masing-masing.
+
+**Acceptance Criteria:**
+- [x] Invoice terbaru menampilkan nomor, client, tanggal, status, dan total.
+- [x] Maksimal delapan invoice ditampilkan.
+- [x] Baris invoice membuka halaman detail yang benar.
+- [x] Client terbaru menampilkan nama dan kontak bila ada.
+- [x] Jumlah invoice per client ditampilkan bila tersedia.
+- [x] Maksimal delapan client ditampilkan.
+- [x] Link semua invoice menuju `/dashboard/invoice`.
+- [x] Link semua client menuju `/dashboard/clients`.
+- [x] Empty state tersedia untuk kedua daftar.
+
+---
+
+### TASK-017 — Dashboard quick actions and resilience
+
+- **Priority:** P1
+- **Status:** Done
+- **Phase:** 3
+- **Depends On:** TASK-014, TASK-015, TASK-016
+- **Blocks:** TASK-018
+
+**Description:**
+Tambahkan aksi cepat Create Invoice dan Add Client serta pastikan dashboard memiliki loading/hydration/error state, responsive layout, dan keyboard accessibility.
+
+**Acceptance Criteria:**
+- [x] Create Invoice membuka alur pembuatan invoice.
+- [x] Add Client membuka alur penambahan client.
+- [x] Loading/hydration state tidak menampilkan data lokal sebelum siap.
+- [x] Error state terlihat bila pembacaan store gagal.
+- [x] Layout tidak overflow pada mobile.
+- [x] Interaksi dapat dioperasikan dengan keyboard.
+- [x] Dashboard tidak melakukan request business API.
+- [x] Dashboard tidak mengubah data lokal.
+
+---
+
+### TASK-018 — Dashboard verification
+
+- **Priority:** P0
+- **Status:** Done
+- **Phase:** 3
+- **Depends On:** TASK-017
+- **Blocks:** None
+
+**Description:**
+Verifikasi dashboard terhadap acceptance test Cycle 3, jalankan test/build/check, dan laporkan gap manual secara jujur.
+
+**Acceptance Criteria:**
+- [x] Unit/integration tests relevan berhasil.
+- [x] `npm run build` berhasil.
+- [x] `npm run check` berhasil atau gap tercatat.
+- [x] Manual smoke test dashboard selesai atau gap dilaporkan.
+- [x] Tidak ada klaim Done tanpa bukti.
+
+---
+
+## Handoff Notes
+
+- Cycle 2 tickets tetap menjadi sumber riwayat.
+- Cycle 3 dashboard mengutamakan data lokal nyata, bukan chart dekoratif.
+- Jangan menjalankan migration atau seed.
+- Jangan membaca/commit `.env`, `cookies*.txt`, `smoke.jar`.
+- Jangan push ke remote kecuali diminta eksplisit.
+- Builder mulai dari TASK-013 setelah membaca SPEC Cycle 3.
+- Sumber kebenaran: `.hermes/scoper/SPEC.md`, `DECISIONS.md`, `RISKS.md`, `PROJECT.md`.

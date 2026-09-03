@@ -1,8 +1,6 @@
 "use client";
-
 import { useEffect, useState } from "react";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { Save, Send } from "lucide-react";
@@ -12,178 +10,116 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { InvoiceWithItems, UpdateInvoiceInput } from "@/server/invoices";
-import { getInvoice, updateInvoice } from "@/server/invoices";
+import { type LocalInvoice, type LocalProfile, useInvoiceStore } from "@/stores/invoice-store";
 
 import {
   defaultInvoiceValues,
+  getInvoiceDiscount,
   getInvoiceSubtotal,
   getInvoiceTax,
   getInvoiceTotal,
   type InvoiceFormValues,
-  invoiceTaxOptions,
 } from "../-components/data";
 import { InvoiceForm } from "../-components/invoice-form";
 import { InvoicePreview } from "../-components/invoice-preview";
 
-function mapInvoiceToFormValues(invoice: InvoiceWithItems): InvoiceFormValues {
+function mapInvoiceToFormValues(invoice: LocalInvoice, profile: LocalProfile): InvoiceFormValues {
+  const client = useInvoiceStore.getState().clients.find((c) => c.id === invoice.clientId);
   return {
     referenceNumber: invoice.number,
     issuedDate: invoice.issuedDate,
     paymentDueDate: invoice.dueDate,
     from: {
-      name: "",
-      email: "",
-      phone: "",
-      website: "",
-      addressLines: [],
-      taxId: "",
-      paymentAccountName: "",
-      routingNumber: "",
-      issuerName: "",
-      logoUrl: "",
+      name: profile.companyName || "",
+      email: profile.email || "",
+      phone: profile.phone || "",
+      website: profile.website || "",
+      addressLines: profile.address ? profile.address.split("\n") : [],
+      taxId: profile.taxId || "",
+      paymentAccountName: profile.paymentAccountName || "",
+      routingNumber: profile.routingNumber || "",
+      issuerName: profile.issuerName || "",
+      logoUrl: profile.logoUrl || "",
     },
     to: {
-      id: invoice.client?.id ?? "",
-      name: invoice.client?.name ?? "",
-      email: invoice.client?.email ?? "",
-      addressLines: invoice.client?.address ? [invoice.client.address] : [],
+      id: client?.id ?? "",
+      name: client?.name ?? "",
+      email: client?.email ?? "",
+      addressLines: client?.address ? [client.address] : [],
       taxId: "",
     },
-    taxId: invoice.taxAmount !== "0" ? "vat" : "none",
-    discountType: "fixed",
-    discountValue: 0,
+    taxId: invoice.taxRate > 0 ? "custom" : "none",
+    taxLabel: invoice.taxLabel ?? "VAT",
+    taxRate: invoice.taxRate || 0,
+    discountType: invoice.discountType ?? "fixed",
+    discountValue: invoice.discountValue ?? 0,
     items: invoice.items.map((item) => ({
       id: item.id,
       description: item.name,
-      quantity: Number(item.quantity),
-      unitPrice: Number(item.price),
+      quantity: item.quantity,
+      unitPrice: item.price,
     })),
   };
 }
 
-function mapFormValuesToUpdateInput(
-  values: InvoiceFormValues,
-  status: "draft" | "sent" | "paid" | "overdue",
-  currency: string,
-): UpdateInvoiceInput {
-  const subtotal = getInvoiceSubtotal(values);
-  const tax = getInvoiceTax(values);
-  const total = getInvoiceTotal(values);
-  const taxOption = invoiceTaxOptions.find((t) => t.id === values.taxId);
-
-  return {
-    id: "",
-    clientId: values.to.id,
-    currency,
-    subtotal: String(subtotal),
-    taxRate: String(taxOption?.rate ?? 0),
-    taxAmount: String(tax),
-    total: String(total),
-    status,
-    note: null,
-    issuedDate: values.issuedDate,
-    dueDate: values.paymentDueDate,
-    items: values.items.map((item) => ({
-      name: item.description,
-      quantity: String(item.quantity),
-      price: String(item.unitPrice),
-      total: String(item.quantity * item.unitPrice),
-    })),
-  };
-}
-
-export const Route = createFileRoute("/(main)/dashboard/invoice/$id/edit")({
-  component: InvoiceEditPage,
-});
+export const Route = createFileRoute("/(main)/dashboard/invoice/$id/edit")({ component: InvoiceEditPage });
 
 function InvoiceEditPage() {
   const navigate = useNavigate();
   const { id } = Route.useParams();
   const [currency, setCurrency] = useState("USD");
+  const invoice = useInvoiceStore((s) => s.invoices.find((i) => i.id === id));
+  const profile = useInvoiceStore((s) => s.profile);
+  const updateInvoice = useInvoiceStore((s) => s.updateInvoice);
 
-  const { data: invoiceData, isLoading } = useQuery({
-    queryKey: ["invoice", id],
-    queryFn: () => getInvoice({ data: { id } }),
-  });
+  const form = useForm<InvoiceFormValues>({ defaultValues: defaultInvoiceValues });
+  const watch = useWatch({ control: form.control }) as InvoiceFormValues;
 
-  const form = useForm<InvoiceFormValues>({
-    defaultValues: defaultInvoiceValues,
-  });
-  const invoice = useWatch({ control: form.control }) as InvoiceFormValues;
-
-  // Populate form when data loads
   useEffect(() => {
-    if (invoiceData && !isLoading) {
-      form.reset(mapInvoiceToFormValues(invoiceData));
-      if (invoiceData.currency) setCurrency(invoiceData.currency);
+    if (invoice) {
+      form.reset(mapInvoiceToFormValues(invoice, profile));
+      if (invoice.currency) setCurrency(invoice.currency);
     }
-  }, [invoiceData, isLoading, form]);
+  }, [invoice, profile, form]);
 
-  const updateMutation = useMutation({
-    mutationFn: async ({
-      values,
-      status,
-    }: {
-      values: InvoiceFormValues;
-      status: "draft" | "sent" | "paid" | "overdue";
-    }) => {
-      const input = mapFormValuesToUpdateInput(values, status, currency);
-      input.id = id;
-      return updateInvoice({ data: input });
-    },
-    onSuccess: async () => {
-      toast.success("Invoice updated");
-      await navigate({ to: "/dashboard/invoice" });
-    },
-    onError: (err) => {
-      toast.error("Failed to update invoice", { description: err.message });
-    },
-  });
-
-  const handleSaveDraft = () => {
-    const values = form.getValues();
-    updateMutation.mutate({ values, status: "draft" });
-  };
-
-  const handleSendInvoice = () => {
-    const values = form.getValues();
-    updateMutation.mutate({ values, status: "sent" });
-  };
-
-  if (isLoading) {
+  if (!invoice)
     return (
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-medium text-3xl leading-none tracking-tight">Edit Invoice</h1>
-        </div>
-        <div className="grid gap-5 xl:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="rounded-xl border bg-card p-4">
-              <div className="space-y-4">
-                {Array.from({ length: 5 }).map((_, j) => (
-                  <div key={j} className="h-8 animate-pulse rounded bg-muted" />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!invoiceData) {
-    return (
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-medium text-3xl leading-none tracking-tight">Invoice Not Found</h1>
-        </div>
+        <h1 className="font-medium text-3xl leading-none tracking-tight">Invoice Not Found</h1>
         <Button variant="link" onClick={() => navigate({ to: "/dashboard/invoice" })}>
           Back to Invoices
         </Button>
       </div>
     );
-  }
+
+  const save = (status: "draft" | "sent") => {
+    const values = form.getValues();
+    const taxRate = Math.min(Math.max(Number(values.taxRate) || 0, 0), 100);
+    updateInvoice(id, {
+      clientId: values.to.id,
+      currency,
+      subtotal: getInvoiceSubtotal(values),
+      taxRate,
+      taxLabel: values.taxLabel,
+      discountType: values.discountType,
+      discountValue: Math.max(Number(values.discountValue) || 0, 0),
+      discountAmount: getInvoiceDiscount(values),
+      taxAmount: getInvoiceTax(values),
+      total: getInvoiceTotal(values),
+      status,
+      issuedDate: values.issuedDate,
+      dueDate: values.paymentDueDate,
+      items: values.items.map((item) => ({
+        id: item.id,
+        name: item.description,
+        quantity: item.quantity,
+        price: item.unitPrice,
+        total: item.quantity * item.unitPrice,
+      })),
+    });
+    toast.success(status === "draft" ? "Invoice saved as draft" : "Invoice updated and marked as sent");
+    void navigate({ to: "/dashboard/invoice" });
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -192,7 +128,6 @@ function InvoiceEditPage() {
           <h1 className="font-medium text-3xl leading-none tracking-tight">Edit Invoice</h1>
           <p className="text-muted-foreground text-sm">Update invoice details and review the preview.</p>
         </div>
-
         <div className="flex flex-wrap items-center gap-3">
           <Field className="w-28 gap-1">
             <FieldLabel className="text-xs">Currency</FieldLabel>
@@ -208,21 +143,20 @@ function InvoiceEditPage() {
               </SelectContent>
             </Select>
           </Field>
-          <Button type="button" variant="outline" disabled={updateMutation.isPending} onClick={handleSaveDraft}>
+          <Button type="button" variant="outline" onClick={() => save("draft")}>
             <Save data-icon="inline-start" />
             Save as Draft
           </Button>
-          <Button type="button" disabled={updateMutation.isPending} onClick={handleSendInvoice}>
+          <Button type="button" onClick={() => save("sent")}>
             <Send data-icon="inline-start" />
-            {updateMutation.isPending ? "Saving..." : "Save & Send"}
+            Save & Send
           </Button>
         </div>
       </div>
-
       <FormProvider {...form}>
         <form className="grid gap-5 xl:grid-cols-2" noValidate>
           <InvoiceForm currency={currency} onCurrencyChange={setCurrency} />
-          <InvoicePreview invoice={invoice} />
+          <InvoicePreview invoice={watch} />
         </form>
       </FormProvider>
     </div>

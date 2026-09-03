@@ -10,40 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as mainRouteRouteImport } from './routes/(main)/route'
-import { Route as externalIndexRouteImport } from './routes/(external)/index'
-import { Route as mainChatRouteRouteImport } from './routes/(main)/chat/route'
 import { Route as mainDashboardRouteRouteImport } from './routes/(main)/dashboard/route'
-import { Route as mainLoginRouteImport } from './routes/(main)/login'
-import { Route as mainMailRouteRouteImport } from './routes/(main)/mail/route'
-import { Route as mainUnauthorizedRouteImport } from './routes/(main)/unauthorized'
-import { Route as mainAuthV2RouteRouteImport } from './routes/(main)/auth/v2/route'
 import { Route as mainDashboardIndexRouteImport } from './routes/(main)/dashboard/index'
-import { Route as mainDashboardSplatRouteImport } from './routes/(main)/dashboard/$'
-import { Route as mainDashboardAcademyRouteRouteImport } from './routes/(main)/dashboard/academy/route'
-import { Route as mainDashboardAnalyticsRouteRouteImport } from './routes/(main)/dashboard/analytics/route'
-import { Route as mainDashboardCalendarRouteRouteImport } from './routes/(main)/dashboard/calendar/route'
-import { Route as mainDashboardChatRouteRouteImport } from './routes/(main)/dashboard/chat/route'
 import { Route as mainDashboardClientsRouteRouteImport } from './routes/(main)/dashboard/clients/route'
-import { Route as mainDashboardComingSoonRouteRouteImport } from './routes/(main)/dashboard/coming-soon/route'
-import { Route as mainDashboardCrmRouteRouteImport } from './routes/(main)/dashboard/crm/route'
-import { Route as mainDashboardDefaultRouteRouteImport } from './routes/(main)/dashboard/default/route'
-import { Route as mainDashboardEcommerceRouteRouteImport } from './routes/(main)/dashboard/ecommerce/route'
-import { Route as mainDashboardFinanceRouteRouteImport } from './routes/(main)/dashboard/finance/route'
-import { Route as mainDashboardInfrastructureRouteRouteImport } from './routes/(main)/dashboard/infrastructure/route'
 import { Route as mainDashboardInvoiceRouteRouteImport } from './routes/(main)/dashboard/invoice/route'
-import { Route as mainDashboardKanbanRouteRouteImport } from './routes/(main)/dashboard/kanban/route'
-import { Route as mainDashboardLogisticsRouteRouteImport } from './routes/(main)/dashboard/logistics/route'
-import { Route as mainDashboardMailRouteRouteImport } from './routes/(main)/dashboard/mail/route'
-import { Route as mainDashboardProductivityRouteRouteImport } from './routes/(main)/dashboard/productivity/route'
-import { Route as mainDashboardRolesRouteRouteImport } from './routes/(main)/dashboard/roles/route'
 import { Route as mainDashboardSettingsRouteRouteImport } from './routes/(main)/dashboard/settings/route'
-import { Route as mainDashboardTasksRouteRouteImport } from './routes/(main)/dashboard/tasks/route'
-import { Route as mainDashboardUsersRouteRouteImport } from './routes/(main)/dashboard/users/route'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as mainAuthV1LoginRouteRouteImport } from './routes/(main)/auth/v1/login/route'
-import { Route as mainAuthV1RegisterRouteRouteImport } from './routes/(main)/auth/v1/register/route'
-import { Route as mainAuthV2LoginRouteRouteImport } from './routes/(main)/auth/v2/login/route'
-import { Route as mainAuthV2RegisterRouteRouteImport } from './routes/(main)/auth/v2/register/route'
 import { Route as mainDashboardClientsIndexRouteImport } from './routes/(main)/dashboard/clients/index'
 import { Route as mainDashboardClientsNewRouteImport } from './routes/(main)/dashboard/clients/new'
 import { Route as mainDashboardInvoiceIndexRouteImport } from './routes/(main)/dashboard/invoice/index'
@@ -56,72 +27,14 @@ const mainRouteRoute = mainRouteRouteImport.update({
   id: '/(main)',
   getParentRoute: () => rootRouteImport,
 } as any)
-const externalIndexRoute = externalIndexRouteImport.update({
-  id: '/(external)/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const mainChatRouteRoute = mainChatRouteRouteImport.update({
-  id: '/chat',
-  path: '/chat',
-  getParentRoute: () => mainRouteRoute,
-} as any)
 const mainDashboardRouteRoute = mainDashboardRouteRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => mainRouteRoute,
 } as any)
-const mainLoginRoute = mainLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => mainRouteRoute,
-} as any)
-const mainMailRouteRoute = mainMailRouteRouteImport.update({
-  id: '/mail',
-  path: '/mail',
-  getParentRoute: () => mainRouteRoute,
-} as any)
-const mainUnauthorizedRoute = mainUnauthorizedRouteImport.update({
-  id: '/unauthorized',
-  path: '/unauthorized',
-  getParentRoute: () => mainRouteRoute,
-} as any)
-const mainAuthV2RouteRoute = mainAuthV2RouteRouteImport.update({
-  id: '/auth/v2',
-  path: '/auth/v2',
-  getParentRoute: () => mainRouteRoute,
-} as any)
 const mainDashboardIndexRoute = mainDashboardIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => mainDashboardRouteRoute,
-} as any)
-const mainDashboardSplatRoute = mainDashboardSplatRouteImport.update({
-  id: '/$',
-  path: '/$',
-  getParentRoute: () => mainDashboardRouteRoute,
-} as any)
-const mainDashboardAcademyRouteRoute =
-  mainDashboardAcademyRouteRouteImport.update({
-    id: '/academy',
-    path: '/academy',
-    getParentRoute: () => mainDashboardRouteRoute,
-  } as any)
-const mainDashboardAnalyticsRouteRoute =
-  mainDashboardAnalyticsRouteRouteImport.update({
-    id: '/analytics',
-    path: '/analytics',
-    getParentRoute: () => mainDashboardRouteRoute,
-  } as any)
-const mainDashboardCalendarRouteRoute =
-  mainDashboardCalendarRouteRouteImport.update({
-    id: '/calendar',
-    path: '/calendar',
-    getParentRoute: () => mainDashboardRouteRoute,
-  } as any)
-const mainDashboardChatRouteRoute = mainDashboardChatRouteRouteImport.update({
-  id: '/chat',
-  path: '/chat',
   getParentRoute: () => mainDashboardRouteRoute,
 } as any)
 const mainDashboardClientsRouteRoute =
@@ -130,116 +43,18 @@ const mainDashboardClientsRouteRoute =
     path: '/clients',
     getParentRoute: () => mainDashboardRouteRoute,
   } as any)
-const mainDashboardComingSoonRouteRoute =
-  mainDashboardComingSoonRouteRouteImport.update({
-    id: '/coming-soon',
-    path: '/coming-soon',
-    getParentRoute: () => mainDashboardRouteRoute,
-  } as any)
-const mainDashboardCrmRouteRoute = mainDashboardCrmRouteRouteImport.update({
-  id: '/crm',
-  path: '/crm',
-  getParentRoute: () => mainDashboardRouteRoute,
-} as any)
-const mainDashboardDefaultRouteRoute =
-  mainDashboardDefaultRouteRouteImport.update({
-    id: '/default',
-    path: '/default',
-    getParentRoute: () => mainDashboardRouteRoute,
-  } as any)
-const mainDashboardEcommerceRouteRoute =
-  mainDashboardEcommerceRouteRouteImport.update({
-    id: '/ecommerce',
-    path: '/ecommerce',
-    getParentRoute: () => mainDashboardRouteRoute,
-  } as any)
-const mainDashboardFinanceRouteRoute =
-  mainDashboardFinanceRouteRouteImport.update({
-    id: '/finance',
-    path: '/finance',
-    getParentRoute: () => mainDashboardRouteRoute,
-  } as any)
-const mainDashboardInfrastructureRouteRoute =
-  mainDashboardInfrastructureRouteRouteImport.update({
-    id: '/infrastructure',
-    path: '/infrastructure',
-    getParentRoute: () => mainDashboardRouteRoute,
-  } as any)
 const mainDashboardInvoiceRouteRoute =
   mainDashboardInvoiceRouteRouteImport.update({
     id: '/invoice',
     path: '/invoice',
     getParentRoute: () => mainDashboardRouteRoute,
   } as any)
-const mainDashboardKanbanRouteRoute =
-  mainDashboardKanbanRouteRouteImport.update({
-    id: '/kanban',
-    path: '/kanban',
-    getParentRoute: () => mainDashboardRouteRoute,
-  } as any)
-const mainDashboardLogisticsRouteRoute =
-  mainDashboardLogisticsRouteRouteImport.update({
-    id: '/logistics',
-    path: '/logistics',
-    getParentRoute: () => mainDashboardRouteRoute,
-  } as any)
-const mainDashboardMailRouteRoute = mainDashboardMailRouteRouteImport.update({
-  id: '/mail',
-  path: '/mail',
-  getParentRoute: () => mainDashboardRouteRoute,
-} as any)
-const mainDashboardProductivityRouteRoute =
-  mainDashboardProductivityRouteRouteImport.update({
-    id: '/productivity',
-    path: '/productivity',
-    getParentRoute: () => mainDashboardRouteRoute,
-  } as any)
-const mainDashboardRolesRouteRoute = mainDashboardRolesRouteRouteImport.update({
-  id: '/roles',
-  path: '/roles',
-  getParentRoute: () => mainDashboardRouteRoute,
-} as any)
 const mainDashboardSettingsRouteRoute =
   mainDashboardSettingsRouteRouteImport.update({
     id: '/settings',
     path: '/settings',
     getParentRoute: () => mainDashboardRouteRoute,
   } as any)
-const mainDashboardTasksRouteRoute = mainDashboardTasksRouteRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
-  getParentRoute: () => mainDashboardRouteRoute,
-} as any)
-const mainDashboardUsersRouteRoute = mainDashboardUsersRouteRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => mainDashboardRouteRoute,
-} as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const mainAuthV1LoginRouteRoute = mainAuthV1LoginRouteRouteImport.update({
-  id: '/auth/v1/login',
-  path: '/auth/v1/login',
-  getParentRoute: () => mainRouteRoute,
-} as any)
-const mainAuthV1RegisterRouteRoute = mainAuthV1RegisterRouteRouteImport.update({
-  id: '/auth/v1/register',
-  path: '/auth/v1/register',
-  getParentRoute: () => mainRouteRoute,
-} as any)
-const mainAuthV2LoginRouteRoute = mainAuthV2LoginRouteRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => mainAuthV2RouteRoute,
-} as any)
-const mainAuthV2RegisterRouteRoute = mainAuthV2RegisterRouteRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => mainAuthV2RouteRoute,
-} as any)
 const mainDashboardClientsIndexRoute =
   mainDashboardClientsIndexRouteImport.update({
     id: '/',
@@ -281,40 +96,11 @@ const mainDashboardInvoiceIdEditRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/chat': typeof mainChatRouteRoute
   '/dashboard': typeof mainDashboardRouteRouteWithChildren
-  '/mail': typeof mainMailRouteRoute
-  '/login': typeof mainLoginRoute
-  '/unauthorized': typeof mainUnauthorizedRoute
-  '/': typeof externalIndexRoute
-  '/auth/v2': typeof mainAuthV2RouteRouteWithChildren
-  '/dashboard/academy': typeof mainDashboardAcademyRouteRoute
-  '/dashboard/analytics': typeof mainDashboardAnalyticsRouteRoute
-  '/dashboard/calendar': typeof mainDashboardCalendarRouteRoute
-  '/dashboard/chat': typeof mainDashboardChatRouteRoute
   '/dashboard/clients': typeof mainDashboardClientsRouteRouteWithChildren
-  '/dashboard/coming-soon': typeof mainDashboardComingSoonRouteRoute
-  '/dashboard/crm': typeof mainDashboardCrmRouteRoute
-  '/dashboard/default': typeof mainDashboardDefaultRouteRoute
-  '/dashboard/ecommerce': typeof mainDashboardEcommerceRouteRoute
-  '/dashboard/finance': typeof mainDashboardFinanceRouteRoute
-  '/dashboard/infrastructure': typeof mainDashboardInfrastructureRouteRoute
   '/dashboard/invoice': typeof mainDashboardInvoiceRouteRouteWithChildren
-  '/dashboard/kanban': typeof mainDashboardKanbanRouteRoute
-  '/dashboard/logistics': typeof mainDashboardLogisticsRouteRoute
-  '/dashboard/mail': typeof mainDashboardMailRouteRoute
-  '/dashboard/productivity': typeof mainDashboardProductivityRouteRoute
-  '/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/dashboard/settings': typeof mainDashboardSettingsRouteRoute
-  '/dashboard/tasks': typeof mainDashboardTasksRouteRoute
-  '/dashboard/users': typeof mainDashboardUsersRouteRoute
-  '/dashboard/$': typeof mainDashboardSplatRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/': typeof mainDashboardIndexRoute
-  '/auth/v1/login': typeof mainAuthV1LoginRouteRoute
-  '/auth/v1/register': typeof mainAuthV1RegisterRouteRoute
-  '/auth/v2/login': typeof mainAuthV2LoginRouteRoute
-  '/auth/v2/register': typeof mainAuthV2RegisterRouteRoute
   '/dashboard/clients/new': typeof mainDashboardClientsNewRoute
   '/dashboard/invoice/$id': typeof mainDashboardInvoiceIdRouteWithChildren
   '/dashboard/invoice/new': typeof mainDashboardInvoiceNewRoute
@@ -324,37 +110,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/invoice/$id/edit': typeof mainDashboardInvoiceIdEditRoute
 }
 export interface FileRoutesByTo {
-  '/chat': typeof mainChatRouteRoute
-  '/mail': typeof mainMailRouteRoute
-  '/login': typeof mainLoginRoute
-  '/unauthorized': typeof mainUnauthorizedRoute
-  '/': typeof externalIndexRoute
-  '/auth/v2': typeof mainAuthV2RouteRouteWithChildren
-  '/dashboard/academy': typeof mainDashboardAcademyRouteRoute
-  '/dashboard/analytics': typeof mainDashboardAnalyticsRouteRoute
-  '/dashboard/calendar': typeof mainDashboardCalendarRouteRoute
-  '/dashboard/chat': typeof mainDashboardChatRouteRoute
-  '/dashboard/coming-soon': typeof mainDashboardComingSoonRouteRoute
-  '/dashboard/crm': typeof mainDashboardCrmRouteRoute
-  '/dashboard/default': typeof mainDashboardDefaultRouteRoute
-  '/dashboard/ecommerce': typeof mainDashboardEcommerceRouteRoute
-  '/dashboard/finance': typeof mainDashboardFinanceRouteRoute
-  '/dashboard/infrastructure': typeof mainDashboardInfrastructureRouteRoute
-  '/dashboard/kanban': typeof mainDashboardKanbanRouteRoute
-  '/dashboard/logistics': typeof mainDashboardLogisticsRouteRoute
-  '/dashboard/mail': typeof mainDashboardMailRouteRoute
-  '/dashboard/productivity': typeof mainDashboardProductivityRouteRoute
-  '/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/dashboard/settings': typeof mainDashboardSettingsRouteRoute
-  '/dashboard/tasks': typeof mainDashboardTasksRouteRoute
-  '/dashboard/users': typeof mainDashboardUsersRouteRoute
-  '/dashboard/$': typeof mainDashboardSplatRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard': typeof mainDashboardIndexRoute
-  '/auth/v1/login': typeof mainAuthV1LoginRouteRoute
-  '/auth/v1/register': typeof mainAuthV1RegisterRouteRoute
-  '/auth/v2/login': typeof mainAuthV2LoginRouteRoute
-  '/auth/v2/register': typeof mainAuthV2RegisterRouteRoute
   '/dashboard/clients/new': typeof mainDashboardClientsNewRoute
   '/dashboard/invoice/$id': typeof mainDashboardInvoiceIdRouteWithChildren
   '/dashboard/invoice/new': typeof mainDashboardInvoiceNewRoute
@@ -366,40 +123,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(main)': typeof mainRouteRouteWithChildren
-  '/(main)/chat': typeof mainChatRouteRoute
   '/(main)/dashboard': typeof mainDashboardRouteRouteWithChildren
-  '/(main)/mail': typeof mainMailRouteRoute
-  '/(main)/login': typeof mainLoginRoute
-  '/(main)/unauthorized': typeof mainUnauthorizedRoute
-  '/(external)/': typeof externalIndexRoute
-  '/(main)/auth/v2': typeof mainAuthV2RouteRouteWithChildren
-  '/(main)/dashboard/academy': typeof mainDashboardAcademyRouteRoute
-  '/(main)/dashboard/analytics': typeof mainDashboardAnalyticsRouteRoute
-  '/(main)/dashboard/calendar': typeof mainDashboardCalendarRouteRoute
-  '/(main)/dashboard/chat': typeof mainDashboardChatRouteRoute
   '/(main)/dashboard/clients': typeof mainDashboardClientsRouteRouteWithChildren
-  '/(main)/dashboard/coming-soon': typeof mainDashboardComingSoonRouteRoute
-  '/(main)/dashboard/crm': typeof mainDashboardCrmRouteRoute
-  '/(main)/dashboard/default': typeof mainDashboardDefaultRouteRoute
-  '/(main)/dashboard/ecommerce': typeof mainDashboardEcommerceRouteRoute
-  '/(main)/dashboard/finance': typeof mainDashboardFinanceRouteRoute
-  '/(main)/dashboard/infrastructure': typeof mainDashboardInfrastructureRouteRoute
   '/(main)/dashboard/invoice': typeof mainDashboardInvoiceRouteRouteWithChildren
-  '/(main)/dashboard/kanban': typeof mainDashboardKanbanRouteRoute
-  '/(main)/dashboard/logistics': typeof mainDashboardLogisticsRouteRoute
-  '/(main)/dashboard/mail': typeof mainDashboardMailRouteRoute
-  '/(main)/dashboard/productivity': typeof mainDashboardProductivityRouteRoute
-  '/(main)/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/(main)/dashboard/settings': typeof mainDashboardSettingsRouteRoute
-  '/(main)/dashboard/tasks': typeof mainDashboardTasksRouteRoute
-  '/(main)/dashboard/users': typeof mainDashboardUsersRouteRoute
-  '/(main)/dashboard/$': typeof mainDashboardSplatRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/(main)/dashboard/': typeof mainDashboardIndexRoute
-  '/(main)/auth/v1/login': typeof mainAuthV1LoginRouteRoute
-  '/(main)/auth/v1/register': typeof mainAuthV1RegisterRouteRoute
-  '/(main)/auth/v2/login': typeof mainAuthV2LoginRouteRoute
-  '/(main)/auth/v2/register': typeof mainAuthV2RegisterRouteRoute
   '/(main)/dashboard/clients/new': typeof mainDashboardClientsNewRoute
   '/(main)/dashboard/invoice/$id': typeof mainDashboardInvoiceIdRouteWithChildren
   '/(main)/dashboard/invoice/new': typeof mainDashboardInvoiceNewRoute
@@ -411,40 +139,11 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/chat'
     | '/dashboard'
-    | '/mail'
-    | '/login'
-    | '/unauthorized'
-    | '/'
-    | '/auth/v2'
-    | '/dashboard/academy'
-    | '/dashboard/analytics'
-    | '/dashboard/calendar'
-    | '/dashboard/chat'
     | '/dashboard/clients'
-    | '/dashboard/coming-soon'
-    | '/dashboard/crm'
-    | '/dashboard/default'
-    | '/dashboard/ecommerce'
-    | '/dashboard/finance'
-    | '/dashboard/infrastructure'
     | '/dashboard/invoice'
-    | '/dashboard/kanban'
-    | '/dashboard/logistics'
-    | '/dashboard/mail'
-    | '/dashboard/productivity'
-    | '/dashboard/roles'
     | '/dashboard/settings'
-    | '/dashboard/tasks'
-    | '/dashboard/users'
-    | '/dashboard/$'
-    | '/api/auth/$'
     | '/dashboard/'
-    | '/auth/v1/login'
-    | '/auth/v1/register'
-    | '/auth/v2/login'
-    | '/auth/v2/register'
     | '/dashboard/clients/new'
     | '/dashboard/invoice/$id'
     | '/dashboard/invoice/new'
@@ -454,37 +153,8 @@ export interface FileRouteTypes {
     | '/dashboard/invoice/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/chat'
-    | '/mail'
-    | '/login'
-    | '/unauthorized'
-    | '/'
-    | '/auth/v2'
-    | '/dashboard/academy'
-    | '/dashboard/analytics'
-    | '/dashboard/calendar'
-    | '/dashboard/chat'
-    | '/dashboard/coming-soon'
-    | '/dashboard/crm'
-    | '/dashboard/default'
-    | '/dashboard/ecommerce'
-    | '/dashboard/finance'
-    | '/dashboard/infrastructure'
-    | '/dashboard/kanban'
-    | '/dashboard/logistics'
-    | '/dashboard/mail'
-    | '/dashboard/productivity'
-    | '/dashboard/roles'
     | '/dashboard/settings'
-    | '/dashboard/tasks'
-    | '/dashboard/users'
-    | '/dashboard/$'
-    | '/api/auth/$'
     | '/dashboard'
-    | '/auth/v1/login'
-    | '/auth/v1/register'
-    | '/auth/v2/login'
-    | '/auth/v2/register'
     | '/dashboard/clients/new'
     | '/dashboard/invoice/$id'
     | '/dashboard/invoice/new'
@@ -495,40 +165,11 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/(main)'
-    | '/(main)/chat'
     | '/(main)/dashboard'
-    | '/(main)/mail'
-    | '/(main)/login'
-    | '/(main)/unauthorized'
-    | '/(external)/'
-    | '/(main)/auth/v2'
-    | '/(main)/dashboard/academy'
-    | '/(main)/dashboard/analytics'
-    | '/(main)/dashboard/calendar'
-    | '/(main)/dashboard/chat'
     | '/(main)/dashboard/clients'
-    | '/(main)/dashboard/coming-soon'
-    | '/(main)/dashboard/crm'
-    | '/(main)/dashboard/default'
-    | '/(main)/dashboard/ecommerce'
-    | '/(main)/dashboard/finance'
-    | '/(main)/dashboard/infrastructure'
     | '/(main)/dashboard/invoice'
-    | '/(main)/dashboard/kanban'
-    | '/(main)/dashboard/logistics'
-    | '/(main)/dashboard/mail'
-    | '/(main)/dashboard/productivity'
-    | '/(main)/dashboard/roles'
     | '/(main)/dashboard/settings'
-    | '/(main)/dashboard/tasks'
-    | '/(main)/dashboard/users'
-    | '/(main)/dashboard/$'
-    | '/api/auth/$'
     | '/(main)/dashboard/'
-    | '/(main)/auth/v1/login'
-    | '/(main)/auth/v1/register'
-    | '/(main)/auth/v2/login'
-    | '/(main)/auth/v2/register'
     | '/(main)/dashboard/clients/new'
     | '/(main)/dashboard/invoice/$id'
     | '/(main)/dashboard/invoice/new'
@@ -540,8 +181,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   mainRouteRoute: typeof mainRouteRouteWithChildren
-  externalIndexRoute: typeof externalIndexRoute
-  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -553,53 +192,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(external)/': {
-      id: '/(external)/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof externalIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(main)/chat': {
-      id: '/(main)/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof mainChatRouteRouteImport
-      parentRoute: typeof mainRouteRoute
-    }
     '/(main)/dashboard': {
       id: '/(main)/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof mainDashboardRouteRouteImport
-      parentRoute: typeof mainRouteRoute
-    }
-    '/(main)/login': {
-      id: '/(main)/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof mainLoginRouteImport
-      parentRoute: typeof mainRouteRoute
-    }
-    '/(main)/mail': {
-      id: '/(main)/mail'
-      path: '/mail'
-      fullPath: '/mail'
-      preLoaderRoute: typeof mainMailRouteRouteImport
-      parentRoute: typeof mainRouteRoute
-    }
-    '/(main)/unauthorized': {
-      id: '/(main)/unauthorized'
-      path: '/unauthorized'
-      fullPath: '/unauthorized'
-      preLoaderRoute: typeof mainUnauthorizedRouteImport
-      parentRoute: typeof mainRouteRoute
-    }
-    '/(main)/auth/v2': {
-      id: '/(main)/auth/v2'
-      path: '/auth/v2'
-      fullPath: '/auth/v2'
-      preLoaderRoute: typeof mainAuthV2RouteRouteImport
       parentRoute: typeof mainRouteRoute
     }
     '/(main)/dashboard/': {
@@ -609,88 +206,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardIndexRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
-    '/(main)/dashboard/$': {
-      id: '/(main)/dashboard/$'
-      path: '/$'
-      fullPath: '/dashboard/$'
-      preLoaderRoute: typeof mainDashboardSplatRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/academy': {
-      id: '/(main)/dashboard/academy'
-      path: '/academy'
-      fullPath: '/dashboard/academy'
-      preLoaderRoute: typeof mainDashboardAcademyRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/analytics': {
-      id: '/(main)/dashboard/analytics'
-      path: '/analytics'
-      fullPath: '/dashboard/analytics'
-      preLoaderRoute: typeof mainDashboardAnalyticsRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/calendar': {
-      id: '/(main)/dashboard/calendar'
-      path: '/calendar'
-      fullPath: '/dashboard/calendar'
-      preLoaderRoute: typeof mainDashboardCalendarRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/chat': {
-      id: '/(main)/dashboard/chat'
-      path: '/chat'
-      fullPath: '/dashboard/chat'
-      preLoaderRoute: typeof mainDashboardChatRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
     '/(main)/dashboard/clients': {
       id: '/(main)/dashboard/clients'
       path: '/clients'
       fullPath: '/dashboard/clients'
       preLoaderRoute: typeof mainDashboardClientsRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/coming-soon': {
-      id: '/(main)/dashboard/coming-soon'
-      path: '/coming-soon'
-      fullPath: '/dashboard/coming-soon'
-      preLoaderRoute: typeof mainDashboardComingSoonRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/crm': {
-      id: '/(main)/dashboard/crm'
-      path: '/crm'
-      fullPath: '/dashboard/crm'
-      preLoaderRoute: typeof mainDashboardCrmRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/default': {
-      id: '/(main)/dashboard/default'
-      path: '/default'
-      fullPath: '/dashboard/default'
-      preLoaderRoute: typeof mainDashboardDefaultRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/ecommerce': {
-      id: '/(main)/dashboard/ecommerce'
-      path: '/ecommerce'
-      fullPath: '/dashboard/ecommerce'
-      preLoaderRoute: typeof mainDashboardEcommerceRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/finance': {
-      id: '/(main)/dashboard/finance'
-      path: '/finance'
-      fullPath: '/dashboard/finance'
-      preLoaderRoute: typeof mainDashboardFinanceRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/infrastructure': {
-      id: '/(main)/dashboard/infrastructure'
-      path: '/infrastructure'
-      fullPath: '/dashboard/infrastructure'
-      preLoaderRoute: typeof mainDashboardInfrastructureRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
     '/(main)/dashboard/invoice': {
@@ -700,96 +220,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardInvoiceRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
-    '/(main)/dashboard/kanban': {
-      id: '/(main)/dashboard/kanban'
-      path: '/kanban'
-      fullPath: '/dashboard/kanban'
-      preLoaderRoute: typeof mainDashboardKanbanRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/logistics': {
-      id: '/(main)/dashboard/logistics'
-      path: '/logistics'
-      fullPath: '/dashboard/logistics'
-      preLoaderRoute: typeof mainDashboardLogisticsRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/mail': {
-      id: '/(main)/dashboard/mail'
-      path: '/mail'
-      fullPath: '/dashboard/mail'
-      preLoaderRoute: typeof mainDashboardMailRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/productivity': {
-      id: '/(main)/dashboard/productivity'
-      path: '/productivity'
-      fullPath: '/dashboard/productivity'
-      preLoaderRoute: typeof mainDashboardProductivityRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/roles': {
-      id: '/(main)/dashboard/roles'
-      path: '/roles'
-      fullPath: '/dashboard/roles'
-      preLoaderRoute: typeof mainDashboardRolesRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
     '/(main)/dashboard/settings': {
       id: '/(main)/dashboard/settings'
       path: '/settings'
       fullPath: '/dashboard/settings'
       preLoaderRoute: typeof mainDashboardSettingsRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/tasks': {
-      id: '/(main)/dashboard/tasks'
-      path: '/tasks'
-      fullPath: '/dashboard/tasks'
-      preLoaderRoute: typeof mainDashboardTasksRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/(main)/dashboard/users': {
-      id: '/(main)/dashboard/users'
-      path: '/users'
-      fullPath: '/dashboard/users'
-      preLoaderRoute: typeof mainDashboardUsersRouteRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(main)/auth/v1/login': {
-      id: '/(main)/auth/v1/login'
-      path: '/auth/v1/login'
-      fullPath: '/auth/v1/login'
-      preLoaderRoute: typeof mainAuthV1LoginRouteRouteImport
-      parentRoute: typeof mainRouteRoute
-    }
-    '/(main)/auth/v1/register': {
-      id: '/(main)/auth/v1/register'
-      path: '/auth/v1/register'
-      fullPath: '/auth/v1/register'
-      preLoaderRoute: typeof mainAuthV1RegisterRouteRouteImport
-      parentRoute: typeof mainRouteRoute
-    }
-    '/(main)/auth/v2/login': {
-      id: '/(main)/auth/v2/login'
-      path: '/login'
-      fullPath: '/auth/v2/login'
-      preLoaderRoute: typeof mainAuthV2LoginRouteRouteImport
-      parentRoute: typeof mainAuthV2RouteRoute
-    }
-    '/(main)/auth/v2/register': {
-      id: '/(main)/auth/v2/register'
-      path: '/register'
-      fullPath: '/auth/v2/register'
-      preLoaderRoute: typeof mainAuthV2RegisterRouteRouteImport
-      parentRoute: typeof mainAuthV2RouteRoute
     }
     '/(main)/dashboard/clients/': {
       id: '/(main)/dashboard/clients/'
@@ -894,92 +330,28 @@ const mainDashboardInvoiceRouteRouteWithChildren =
   )
 
 interface mainDashboardRouteRouteChildren {
-  mainDashboardAcademyRouteRoute: typeof mainDashboardAcademyRouteRoute
-  mainDashboardAnalyticsRouteRoute: typeof mainDashboardAnalyticsRouteRoute
-  mainDashboardCalendarRouteRoute: typeof mainDashboardCalendarRouteRoute
-  mainDashboardChatRouteRoute: typeof mainDashboardChatRouteRoute
   mainDashboardClientsRouteRoute: typeof mainDashboardClientsRouteRouteWithChildren
-  mainDashboardComingSoonRouteRoute: typeof mainDashboardComingSoonRouteRoute
-  mainDashboardCrmRouteRoute: typeof mainDashboardCrmRouteRoute
-  mainDashboardDefaultRouteRoute: typeof mainDashboardDefaultRouteRoute
-  mainDashboardEcommerceRouteRoute: typeof mainDashboardEcommerceRouteRoute
-  mainDashboardFinanceRouteRoute: typeof mainDashboardFinanceRouteRoute
-  mainDashboardInfrastructureRouteRoute: typeof mainDashboardInfrastructureRouteRoute
   mainDashboardInvoiceRouteRoute: typeof mainDashboardInvoiceRouteRouteWithChildren
-  mainDashboardKanbanRouteRoute: typeof mainDashboardKanbanRouteRoute
-  mainDashboardLogisticsRouteRoute: typeof mainDashboardLogisticsRouteRoute
-  mainDashboardMailRouteRoute: typeof mainDashboardMailRouteRoute
-  mainDashboardProductivityRouteRoute: typeof mainDashboardProductivityRouteRoute
-  mainDashboardRolesRouteRoute: typeof mainDashboardRolesRouteRoute
   mainDashboardSettingsRouteRoute: typeof mainDashboardSettingsRouteRoute
-  mainDashboardTasksRouteRoute: typeof mainDashboardTasksRouteRoute
-  mainDashboardUsersRouteRoute: typeof mainDashboardUsersRouteRoute
-  mainDashboardSplatRoute: typeof mainDashboardSplatRoute
   mainDashboardIndexRoute: typeof mainDashboardIndexRoute
 }
 
 const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
-  mainDashboardAcademyRouteRoute: mainDashboardAcademyRouteRoute,
-  mainDashboardAnalyticsRouteRoute: mainDashboardAnalyticsRouteRoute,
-  mainDashboardCalendarRouteRoute: mainDashboardCalendarRouteRoute,
-  mainDashboardChatRouteRoute: mainDashboardChatRouteRoute,
   mainDashboardClientsRouteRoute: mainDashboardClientsRouteRouteWithChildren,
-  mainDashboardComingSoonRouteRoute: mainDashboardComingSoonRouteRoute,
-  mainDashboardCrmRouteRoute: mainDashboardCrmRouteRoute,
-  mainDashboardDefaultRouteRoute: mainDashboardDefaultRouteRoute,
-  mainDashboardEcommerceRouteRoute: mainDashboardEcommerceRouteRoute,
-  mainDashboardFinanceRouteRoute: mainDashboardFinanceRouteRoute,
-  mainDashboardInfrastructureRouteRoute: mainDashboardInfrastructureRouteRoute,
   mainDashboardInvoiceRouteRoute: mainDashboardInvoiceRouteRouteWithChildren,
-  mainDashboardKanbanRouteRoute: mainDashboardKanbanRouteRoute,
-  mainDashboardLogisticsRouteRoute: mainDashboardLogisticsRouteRoute,
-  mainDashboardMailRouteRoute: mainDashboardMailRouteRoute,
-  mainDashboardProductivityRouteRoute: mainDashboardProductivityRouteRoute,
-  mainDashboardRolesRouteRoute: mainDashboardRolesRouteRoute,
   mainDashboardSettingsRouteRoute: mainDashboardSettingsRouteRoute,
-  mainDashboardTasksRouteRoute: mainDashboardTasksRouteRoute,
-  mainDashboardUsersRouteRoute: mainDashboardUsersRouteRoute,
-  mainDashboardSplatRoute: mainDashboardSplatRoute,
   mainDashboardIndexRoute: mainDashboardIndexRoute,
 }
 
 const mainDashboardRouteRouteWithChildren =
   mainDashboardRouteRoute._addFileChildren(mainDashboardRouteRouteChildren)
 
-interface mainAuthV2RouteRouteChildren {
-  mainAuthV2LoginRouteRoute: typeof mainAuthV2LoginRouteRoute
-  mainAuthV2RegisterRouteRoute: typeof mainAuthV2RegisterRouteRoute
-}
-
-const mainAuthV2RouteRouteChildren: mainAuthV2RouteRouteChildren = {
-  mainAuthV2LoginRouteRoute: mainAuthV2LoginRouteRoute,
-  mainAuthV2RegisterRouteRoute: mainAuthV2RegisterRouteRoute,
-}
-
-const mainAuthV2RouteRouteWithChildren = mainAuthV2RouteRoute._addFileChildren(
-  mainAuthV2RouteRouteChildren,
-)
-
 interface mainRouteRouteChildren {
-  mainChatRouteRoute: typeof mainChatRouteRoute
   mainDashboardRouteRoute: typeof mainDashboardRouteRouteWithChildren
-  mainMailRouteRoute: typeof mainMailRouteRoute
-  mainLoginRoute: typeof mainLoginRoute
-  mainUnauthorizedRoute: typeof mainUnauthorizedRoute
-  mainAuthV2RouteRoute: typeof mainAuthV2RouteRouteWithChildren
-  mainAuthV1LoginRouteRoute: typeof mainAuthV1LoginRouteRoute
-  mainAuthV1RegisterRouteRoute: typeof mainAuthV1RegisterRouteRoute
 }
 
 const mainRouteRouteChildren: mainRouteRouteChildren = {
-  mainChatRouteRoute: mainChatRouteRoute,
   mainDashboardRouteRoute: mainDashboardRouteRouteWithChildren,
-  mainMailRouteRoute: mainMailRouteRoute,
-  mainLoginRoute: mainLoginRoute,
-  mainUnauthorizedRoute: mainUnauthorizedRoute,
-  mainAuthV2RouteRoute: mainAuthV2RouteRouteWithChildren,
-  mainAuthV1LoginRouteRoute: mainAuthV1LoginRouteRoute,
-  mainAuthV1RegisterRouteRoute: mainAuthV1RegisterRouteRoute,
 }
 
 const mainRouteRouteWithChildren = mainRouteRoute._addFileChildren(
@@ -988,8 +360,6 @@ const mainRouteRouteWithChildren = mainRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   mainRouteRoute: mainRouteRouteWithChildren,
-  externalIndexRoute: externalIndexRoute,
-  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

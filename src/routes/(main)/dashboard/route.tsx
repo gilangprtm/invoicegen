@@ -4,9 +4,7 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { getAuthSession } from "@/lib/middleware";
 import { cn } from "@/lib/utils";
-import { getDashboardLayout } from "@/server/server-actions";
 
 import { AppSidebar } from "./-components/sidebar/app-sidebar";
 import { LayoutControls } from "./-components/sidebar/layout-controls";
@@ -14,18 +12,13 @@ import { SearchDialog } from "./-components/sidebar/search-dialog";
 import { ThemeSwitcher } from "./-components/sidebar/theme-switcher";
 
 export const Route = createFileRoute("/(main)/dashboard")({
-  loader: () => getDashboardLayout(),
-  beforeLoad: async () => {
-    const session = await getAuthSession();
-    if (!session) {
-      throw Route.redirect({ to: "/login", search: { redirect: "/dashboard/default" } });
-    }
-  },
   component: DashboardLayout,
 });
 
 function DashboardLayout() {
-  const { defaultOpen, variant, collapsible } = Route.useLoaderData();
+  const defaultOpen = true;
+  const variant = "inset" as const;
+  const collapsible = "icon" as const;
 
   return (
     <SidebarProvider

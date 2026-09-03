@@ -1,5 +1,3 @@
-import { setValueToCookie } from "@/server/server-actions";
-
 import { setClientCookie } from "../cookie";
 import { setLocalStorageValue } from "../local-storage";
 import {
@@ -19,7 +17,9 @@ async function persistByMode(mode: PreferencePersistence, key: string, value: st
       return;
 
     case "server-cookie":
-      await setValueToCookie(key, value);
+      // This app is fully local (no server), so server-cookie prefs fall back
+      // to a client cookie. They are still applied consistently on the client.
+      setClientCookie(key, value);
       return;
 
     case "localStorage":

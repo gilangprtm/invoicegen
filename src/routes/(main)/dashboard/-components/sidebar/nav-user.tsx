@@ -1,7 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
-import { EllipsisVertical, LogOut, Settings } from "lucide-react";
+import { EllipsisVertical, Settings } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -13,33 +12,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
-import { authClient } from "@/lib/auth-client";
-import { getAuthSession } from "@/lib/middleware";
 import { getInitials } from "@/lib/utils";
-
-function useUser() {
-  return useQuery({
-    queryKey: ["current-user"],
-    queryFn: async () => {
-      const session = await getAuthSession();
-      if (!session?.user) throw new Error("Not authenticated");
-      return session.user;
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-}
+import { defaultLocalProfile, useInvoiceStore } from "@/stores/invoice-store";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   const navigate = useNavigate();
-  const { data: user } = useUser();
+  const profile = useInvoiceStore((state) => state.profile);
 
-  const handleSignOut = async () => {
-    await authClient.signOut();
-    await navigate({ to: "/login" });
-  };
-
-  const displayName = user?.name?.trim() ? user.name : user?.email || "User";
+  const displayName = profile.companyName || defaultLocalProfile.companyName;
   const initials = getInitials(displayName);
 
   return (
@@ -60,7 +41,7 @@ export function NavUser() {
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{displayName}</span>
-                <span className="truncate text-muted-foreground text-xs">{user?.email}</span>
+                <span className="truncate text-muted-foreground text-xs">Local workspace</span>
               </div>
               <EllipsisVertical className="ml-auto size-4" />
             </div>
@@ -77,7 +58,7 @@ export function NavUser() {
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{displayName}</span>
-                <span className="truncate text-muted-foreground text-xs">{user?.email}</span>
+                <span className="truncate text-muted-foreground text-xs">Local workspace</span>
               </div>
             </div>
             <DropdownMenuSeparator />
@@ -87,11 +68,6 @@ export function NavUser() {
                 Settings
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut}>
-              <LogOut />
-              Log out
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

@@ -1,6 +1,6 @@
 import { addDays, format } from "date-fns";
 
-import type { UserProfile } from "@/server/profile";
+import type { LocalProfile } from "@/stores/invoice-store";
 
 export interface InvoiceLineItem {
   id: string;
@@ -49,12 +49,14 @@ export interface InvoiceFormValues {
   from: InvoiceFromDetails;
   to: InvoiceToDetails;
   taxId: string;
+  taxLabel: string;
+  taxRate: number;
   discountType: InvoiceDiscountType;
   discountValue: number;
   items: InvoiceLineItem[];
 }
 
-function buildFromFromProfile(profile: UserProfile | null): InvoiceFromDetails {
+function buildFromFromProfile(profile: LocalProfile | null): InvoiceFromDetails {
   return {
     name: profile?.companyName || "",
     email: profile?.email || "",
@@ -69,7 +71,7 @@ function buildFromFromProfile(profile: UserProfile | null): InvoiceFromDetails {
   };
 }
 
-export function getDefaultValues(profile: UserProfile | null): InvoiceFormValues {
+export function getDefaultValues(profile: LocalProfile | null): InvoiceFormValues {
   const today = new Date();
 
   return {
@@ -85,6 +87,8 @@ export function getDefaultValues(profile: UserProfile | null): InvoiceFormValues
       taxId: "",
     },
     taxId: "vat",
+    taxLabel: "VAT",
+    taxRate: 12,
     discountType: "fixed",
     discountValue: 0,
     items: [],
@@ -115,6 +119,8 @@ export const defaultInvoiceValues: InvoiceFormValues = {
     taxId: "",
   },
   taxId: "vat",
+  taxLabel: "VAT",
+  taxRate: 12,
   discountType: "fixed",
   discountValue: 0,
   items: [],
@@ -143,11 +149,13 @@ export function getInvoiceSubtotal(invoice: InvoiceFormValues) {
 }
 
 export function getInvoiceTaxOption(invoice: InvoiceFormValues) {
-  return invoiceTaxOptions.find((taxOption) => taxOption.id === invoice.taxId) ?? invoiceTaxOptions[0];
+  const preset = invoiceTaxOptions.find((taxOption) => taxOption.id === invoice.taxId);
+  return preset ?? { id: "custom", name: invoice.taxLabel || "Tax", rate: invoice.taxRate || 0 };
 }
 
 export function getInvoiceTax(invoice: InvoiceFormValues) {
-  const taxRate = getInvoiceTaxOption(invoice).rate;
+  // biome-ignore lint/suspicious/noUnnecessaryConditions: taxRate may be undefined in older backups.
+  const taxRate = Math.min(Math.max(Number(invoice.taxRate ?? getInvoiceTaxOption(invoice).rate) || 0, 0), 100);
   return Math.max(getInvoiceSubtotal(invoice) - getInvoiceDiscount(invoice), 0) * (taxRate / 100);
 }
 

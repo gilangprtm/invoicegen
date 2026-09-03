@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { Controller, useForm, useFormContext } from "react-hook-form";
@@ -25,7 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { getInitials } from "@/lib/utils";
-import { createClients, getClients } from "@/server/clients";
+import { useInvoiceStore } from "@/stores/invoice-store";
 
 import type { InvoiceFormValues } from "./data";
 
@@ -44,15 +43,13 @@ interface ClientSelectorProps {
 
 export function ClientSelector({ showError = false }: ClientSelectorProps) {
   const { control } = useFormContext<InvoiceFormValues>();
-  const queryClient = useQueryClient();
+  const clientsData = useInvoiceStore((state) => state.clients);
+  const addClient = useInvoiceStore((state) => state.addClient);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const fieldRef = useRef<{ onChange: (value: { id: string; name: string; email: string; addressLines: string[]; taxId: string }) => void } | null>(null);
-
-  const { data: clientsData } = useSuspenseQuery({
-    queryKey: ["clients-list"],
-    queryFn: () => getClients(),
-  });
+  const fieldRef = useRef<{
+    onChange: (value: { id: string; name: string; email: string; addressLines: string[]; taxId: string }) => void;
+  } | null>(null);
 
   const {
     register,
@@ -64,37 +61,24 @@ export function ClientSelector({ showError = false }: ClientSelectorProps) {
     defaultValues: { name: "", email: "", phone: "", address: "" },
   });
 
-  const createMutation = useMutation({
-    mutationFn: (data: ClientFormData) =>
-      createClients({
-        data: {
-          name: data.name,
-          email: data.email || undefined,
-          phone: data.phone || undefined,
-          address: data.address || undefined,
-        },
-      }),
-    onSuccess: async (_result, variables) => {
-      toast.success("Client created");
-      await queryClient.invalidateQueries({ queryKey: ["clients-list"] });
-      const updated = await queryClient.fetchQuery({ queryKey: ["clients-list"], queryFn: () => getClients() });
-      const newClient = updated.find((c) => c.name === variables.name);
-      if (newClient && fieldRef.current) {
-        fieldRef.current.onChange({
-          id: newClient.id,
-          name: newClient.name,
-          email: newClient.email || "",
-          addressLines: newClient.address ? [newClient.address] : [],
-          taxId: "",
-        });
-      }
-      setDialogOpen(false);
-      reset();
-    },
-    onError: (err) => {
-      toast.error("Failed to create client", { description: err.message });
-    },
-  });
+  const createClient = (data: ClientFormData) => {
+    const newClient = addClient({
+      name: data.name,
+      email: data.email || "",
+      phone: data.phone || "",
+      address: data.address || "",
+    });
+    toast.success("Client created");
+    fieldRef.current?.onChange({
+      id: newClient.id,
+      name: newClient.name,
+      email: newClient.email,
+      addressLines: newClient.address ? [newClient.address] : [],
+      taxId: "",
+    });
+    setDialogOpen(false);
+    reset();
+  };
 
   return (
     <section className="flex flex-col gap-4">
@@ -177,7 +161,7 @@ export function ClientSelector({ showError = false }: ClientSelectorProps) {
             <DialogDescription>Create a new client record</DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit((data) => createMutation.mutate(data))} className="space-y-4">
+          <form onSubmit={handleSubmit(createClient)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="client-name">Name *</Label>
               <Input id="client-name" {...register("name")} placeholder="Client name" />
@@ -204,8 +188,8 @@ export function ClientSelector({ showError = false }: ClientSelectorProps) {
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? "Creating..." : "Create Client"}
+              <Button type="submit" disabled={false}>
+                Create Client
               </Button>
             </DialogFooter>
           </form>

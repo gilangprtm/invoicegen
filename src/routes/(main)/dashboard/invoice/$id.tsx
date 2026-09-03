@@ -1,33 +1,19 @@
 "use client";
-
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 
 import { format, parseISO } from "date-fns";
 import { ArrowLeft, CheckCircle2, Download, Pencil, Send, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
-import type { InvoiceWithItems } from "@/server/invoices";
-import { deleteInvoice, getInvoice, updateInvoice } from "@/server/invoices";
+import { useInvoiceStore } from "@/stores/invoice-store";
 
-// ─── Currency locale map ───
+import { renderInvoicePdf } from "./-components/invoice-pdf";
 
 const CURRENCY_LOCALE: Record<string, string> = {
   USD: "en-US",
@@ -36,15 +22,9 @@ const CURRENCY_LOCALE: Record<string, string> = {
   GBP: "en-GB",
   JPY: "ja-JP",
 };
-
 function formatInvoiceCurrency(amount: number, currency: string) {
-  return formatCurrency(amount, {
-    currency,
-    locale: CURRENCY_LOCALE[currency] ?? "en-US",
-  });
+  return formatCurrency(amount, { currency, locale: CURRENCY_LOCALE[currency] ?? "en-US" });
 }
-
-// ─── Status badge ───
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> = {
   draft: "secondary",
@@ -52,14 +32,12 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> = 
   paid: "default",
   overdue: "destructive",
 };
-
 const STATUS_CLASS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
   sent: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   paid: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
   overdue: "",
 };
-
 function StatusBadge({ status }: { status: string }) {
   const variant = STATUS_VARIANT[status] ?? "secondary";
   const cls = STATUS_CLASS[status] ?? "";
@@ -70,91 +48,89 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// ─── Route definition ───
-
-export const Route = createFileRoute("/(main)/dashboard/invoice/$id")({
-  component: InvoiceDetailPage,
-});
-
-// ─── Main component ───
+export const Route = createFileRoute("/(main)/dashboard/invoice/$id")({ component: InvoiceDetailPage });
 
 function InvoiceDetailPage() {
   const navigate = useNavigate();
   const router = useRouter();
   const { id } = Route.useParams();
-  const queryClient = useQueryClient();
-
-  const {
-    data: invoice,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["invoice", id],
-    queryFn: () => getInvoice({ data: { id } }),
-  });
-
-  const statusMutation = useMutation({
-    mutationFn: (newStatus: "sent" | "paid" | "overdue") => updateInvoice({ data: { id, status: newStatus } }),
-    onSuccess: () => {
-      toast.success("Invoice status updated");
-      queryClient.invalidateQueries({ queryKey: ["invoice", id] });
-      queryClient.invalidateQueries({ queryKey: ["invoices"] });
-      router.invalidate();
-    },
-    onError: (err) => {
-      toast.error("Failed to update status", { description: err.message });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteInvoice({ data: { id } }),
-    onSuccess: async () => {
-      toast.success("Invoice deleted");
-      queryClient.invalidateQueries({ queryKey: ["invoices"] });
-      router.invalidate();
-      await navigate({ to: "/dashboard/invoice" });
-    },
-    onError: (err) => {
-      toast.error("Failed to delete invoice", { description: err.message });
-    },
-  });
-
-  // ─── Loading state ───
-
-  if (isLoading) {
+  const invoice = useInvoiceStore((s) => s.invoices.find((i) => i.id === id));
+  const client = useInvoiceStore((s) => s.clients.find((c) => c.id === invoice?.clientId));
+  const profile = useInvoiceStore((s) => s.profile);
+  const setStatus = useInvoiceStore((s) => s.setStatus);
+  const removeInvoice = useInvoiceStore((s) => s.deleteInvoice);
+  if (!invoice)
     return (
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-medium text-3xl leading-none tracking-tight">Invoice Details</h1>
-        </div>
-        <div className="space-y-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl bg-muted" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // ─── Not found ───
-
-  if (isError || !invoice) {
-    return (
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-medium text-3xl leading-none tracking-tight">Invoice Not Found</h1>
-        </div>
+        <h1 className="font-medium text-3xl leading-none tracking-tight">Invoice Not Found</h1>
         <Button variant="link" onClick={() => navigate({ to: "/dashboard/invoice" })}>
           <ArrowLeft className="size-4" />
           Back to Invoices
         </Button>
       </div>
     );
-  }
+
+  const changeStatus = (status: "sent" | "paid" | "overdue") => {
+    if (setStatus(id, status)) {
+      toast.success("Invoice status updated");
+      router.invalidate();
+    } else toast.error("Invalid invoice status transition");
+  };
+  const handleDelete = () => {
+    if (removeInvoice(id)) {
+      toast.success("Invoice deleted");
+      void navigate({ to: "/dashboard/invoice" });
+    } else toast.error("Only draft invoices can be deleted");
+  };
+  const handleDownloadPdf = async () => {
+    const blob = await renderInvoicePdf(
+      {
+        referenceNumber: invoice.number,
+        issuedDate: invoice.issuedDate,
+        paymentDueDate: invoice.dueDate,
+        from: {
+          name: profile.companyName || "",
+          email: profile.email || "",
+          phone: profile.phone || "",
+          website: profile.website || "",
+          addressLines: profile.address ? profile.address.split("\n") : [],
+          taxId: profile.taxId || "",
+          paymentAccountName: profile.paymentAccountName || "",
+          routingNumber: profile.routingNumber || "",
+          issuerName: profile.issuerName || "",
+          logoUrl: profile.logoUrl || "",
+        },
+        to: {
+          id: client?.id ?? "",
+          name: client?.name ?? "",
+          email: client?.email ?? "",
+          addressLines: client?.address ? [client.address] : [],
+          taxId: "",
+        },
+        taxId: invoice.taxRate ? "custom" : "none",
+        taxLabel: invoice.taxLabel || "Tax",
+        taxRate: invoice.taxRate,
+        discountType: invoice.discountType ?? "fixed",
+        discountValue: invoice.discountValue ?? 0,
+        items: invoice.items.map((item) => ({
+          id: item.id,
+          description: item.name,
+          quantity: item.quantity,
+          unitPrice: item.price,
+        })),
+      },
+      invoice.currency,
+    );
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${invoice.number}.pdf`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="font-medium text-3xl leading-none tracking-tight">Invoice Details</h1>
@@ -165,21 +141,16 @@ function InvoiceDetailPage() {
         </div>
       </div>
 
-      {/* Action Bar */}
       <ActionBar
         invoice={invoice}
-        onStatusChange={(s) => statusMutation.mutate(s)}
-        onDelete={() => deleteMutation.mutate()}
+        onStatusChange={changeStatus}
+        onDelete={handleDelete}
         onEdit={() => navigate({ to: `/dashboard/invoice/${id}/edit` })}
-        statusPending={statusMutation.isPending}
-        deletePending={deleteMutation.isPending}
+        onDownloadPdf={handleDownloadPdf}
       />
 
-      {/* Invoice Content */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main column */}
         <div className="flex flex-col gap-6 lg:col-span-2">
-          {/* Invoice meta */}
           <Card>
             <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
               <div>
@@ -201,13 +172,12 @@ function InvoiceDetailPage() {
               {invoice.paidAt && (
                 <div>
                   <p className="mb-1 font-medium text-muted-foreground text-xs uppercase tracking-wide">Paid At</p>
-                  <p className="font-medium">{formatDateSafe(invoice.paidAt as unknown as string)}</p>
+                  <p className="font-medium">{formatDateSafe(invoice.paidAt)}</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Items Table */}
           <Card>
             <CardContent className="p-6">
               <h3 className="mb-4 font-medium text-lg">Line Items</h3>
@@ -232,12 +202,12 @@ function InvoiceDetailPage() {
                       invoice.items.map((item) => (
                         <TableRow key={item.id}>
                           <TableCell className="font-medium">{item.name}</TableCell>
-                          <TableCell className="text-center">{Number(item.quantity)}</TableCell>
+                          <TableCell className="text-center">{item.quantity}</TableCell>
                           <TableCell className="text-right">
-                            {formatInvoiceCurrency(Number(item.price), invoice.currency)}
+                            {formatInvoiceCurrency(item.price, invoice.currency)}
                           </TableCell>
                           <TableCell className="text-right font-medium">
-                            {formatInvoiceCurrency(Number(item.total), invoice.currency)}
+                            {formatInvoiceCurrency(item.total, invoice.currency)}
                           </TableCell>
                         </TableRow>
                       ))
@@ -245,29 +215,23 @@ function InvoiceDetailPage() {
                   </TableBody>
                 </Table>
               </div>
-
-              {/* Totals */}
               <div className="mt-6 flex justify-end">
                 <div className="w-72 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-medium">
-                      {formatInvoiceCurrency(Number(invoice.subtotal), invoice.currency)}
-                    </span>
+                    <span className="font-medium">{formatInvoiceCurrency(invoice.subtotal, invoice.currency)}</span>
                   </div>
-                  {Number(invoice.taxRate) > 0 && (
+                  {invoice.taxRate > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Tax ({invoice.taxRate}%)</span>
-                      <span className="font-medium">
-                        {formatInvoiceCurrency(Number(invoice.taxAmount), invoice.currency)}
-                      </span>
+                      <span className="font-medium">{formatInvoiceCurrency(invoice.taxAmount, invoice.currency)}</span>
                     </div>
                   )}
                   <Separator />
                   <div className="flex justify-between">
                     <span className="font-medium text-lg">Total</span>
                     <span className="font-semibold text-lg">
-                      {formatInvoiceCurrency(Number(invoice.total), invoice.currency)}
+                      {formatInvoiceCurrency(invoice.total, invoice.currency)}
                     </span>
                   </div>
                 </div>
@@ -275,7 +239,6 @@ function InvoiceDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Notes */}
           {invoice.note && (
             <Card>
               <CardContent className="p-6">
@@ -286,28 +249,22 @@ function InvoiceDetailPage() {
           )}
         </div>
 
-        {/* Sidebar */}
         <div className="flex flex-col gap-6">
-          {/* Bill To */}
           <Card>
             <CardContent className="p-6">
               <h3 className="mb-3 font-medium text-lg">Bill To</h3>
-              {invoice.client ? (
+              {client ? (
                 <div className="space-y-1 text-sm">
-                  <p className="font-medium">{invoice.client.name}</p>
-                  {invoice.client.email && <p className="text-muted-foreground">{invoice.client.email}</p>}
-                  {invoice.client.phone && <p className="text-muted-foreground">{invoice.client.phone}</p>}
-                  {invoice.client.address && (
-                    <p className="whitespace-pre-wrap text-muted-foreground">{invoice.client.address}</p>
-                  )}
+                  <p className="font-medium">{client.name}</p>
+                  {client.email && <p className="text-muted-foreground">{client.email}</p>}
+                  {client.phone && <p className="text-muted-foreground">{client.phone}</p>}
+                  {client.address && <p className="whitespace-pre-wrap text-muted-foreground">{client.address}</p>}
                 </div>
               ) : (
                 <p className="text-muted-foreground text-sm">No client assigned</p>
               )}
             </CardContent>
           </Card>
-
-          {/* Invoice Summary */}
           <Card>
             <CardContent className="p-6">
               <h3 className="mb-3 font-medium text-lg">Summary</h3>
@@ -318,11 +275,11 @@ function InvoiceDetailPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Created</span>
-                  <span>{formatDateSafe(invoice.createdAt as unknown as string)}</span>
+                  <span>{formatDateSafe(invoice.createdAt)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Updated</span>
-                  <span>{formatDateSafe(invoice.updatedAt as unknown as string)}</span>
+                  <span>{formatDateSafe(invoice.updatedAt)}</span>
                 </div>
               </div>
             </CardContent>
@@ -333,104 +290,68 @@ function InvoiceDetailPage() {
   );
 }
 
-// ─── Action Bar ───
-
 type ActionBarProps = {
-  invoice: InvoiceWithItems;
+  invoice: ReturnType<typeof useInvoiceStore.getState>["invoices"][number];
   onStatusChange: (status: "sent" | "paid" | "overdue") => void;
   onDelete: () => void;
   onEdit: () => void;
-  statusPending: boolean;
-  deletePending: boolean;
+  onDownloadPdf: () => void;
 };
-
-function ActionBar({ invoice, onStatusChange, onDelete, onEdit, statusPending, deletePending }: ActionBarProps) {
+function ActionBar({ invoice, onStatusChange, onDelete, onEdit, onDownloadPdf }: ActionBarProps) {
   const navigate = useNavigate();
   const { status } = invoice;
-
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {/* Back */}
       <Button variant="outline" onClick={() => navigate({ to: "/dashboard/invoice" })}>
         <ArrowLeft className="size-4" />
         Back
       </Button>
-
       <div className="flex-1" />
-
-      {/* Draft actions */}
       {status === "draft" && (
         <>
-          <Button variant="outline" disabled={statusPending} onClick={onEdit}>
+          <Button variant="outline" onClick={onEdit}>
             <Pencil className="size-4" />
             Edit
           </Button>
-          <AlertDialog>
-            <AlertDialogTrigger>
-              <Button variant="outline" disabled={deletePending}>
-                <Trash2 className="size-4" />
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Invoice</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete invoice {invoice.number}? This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={onDelete}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <Button disabled={statusPending} onClick={() => onStatusChange("sent")}>
+          <Button variant="outline" onClick={onDelete}>
+            <Trash2 className="size-4" />
+            Delete
+          </Button>
+          <Button onClick={() => onStatusChange("sent")}>
             <Send className="size-4" />
             Mark as Sent
           </Button>
         </>
       )}
-
-      {/* Sent actions */}
       {status === "sent" && (
         <>
-          <Button disabled={statusPending} onClick={() => onStatusChange("paid")}>
+          <Button onClick={() => onStatusChange("paid")}>
             <CheckCircle2 className="size-4" />
             Mark as Paid
           </Button>
-          <Button variant="outline" disabled={statusPending} onClick={() => onStatusChange("overdue")}>
+          <Button variant="outline" onClick={() => onStatusChange("overdue")}>
             <XCircle className="size-4" />
             Mark as Overdue
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={onDownloadPdf}>
             <Download className="size-4" />
             Download PDF
           </Button>
         </>
       )}
-
-      {/* Paid actions */}
       {status === "paid" && (
-        <Button variant="outline">
+        <Button variant="outline" onClick={onDownloadPdf}>
           <Download className="size-4" />
           Download PDF
         </Button>
       )}
-
-      {/* Overdue actions */}
       {status === "overdue" && (
         <>
-          <Button disabled={statusPending} onClick={() => onStatusChange("paid")}>
+          <Button onClick={() => onStatusChange("paid")}>
             <CheckCircle2 className="size-4" />
             Mark as Paid
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={onDownloadPdf}>
             <Download className="size-4" />
             Download PDF
           </Button>
@@ -440,13 +361,9 @@ function ActionBar({ invoice, onStatusChange, onDelete, onEdit, statusPending, d
   );
 }
 
-// ─── Helpers ───
-
 function formatDateSafe(dateStr: string | Date): string {
   try {
-    if (dateStr instanceof Date) {
-      return format(dateStr, "MMM d, yyyy");
-    }
+    if (dateStr instanceof Date) return format(dateStr, "MMM d, yyyy");
     return format(parseISO(dateStr), "MMM d, yyyy");
   } catch {
     return String(dateStr);

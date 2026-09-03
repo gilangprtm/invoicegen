@@ -20,11 +20,5 @@ export default defineConfig({
       "#": path.resolve(__dirname, "./src"),
     },
   },
-  plugins: [
-    tanstackStart({
-      ssr: false,
-    }),
-    tailwindcss(),
-    viteReact(),
-  ],
+  plugins: [tanstackStart(), tailwindcss(), viteReact()],
 });

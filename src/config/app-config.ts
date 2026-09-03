@@ -1,14 +1,11 @@
-import packageJson from "../../package.json";
-
 const currentYear = new Date().getFullYear();
 
 export const APP_CONFIG = {
-  name: "Studio Admin",
-  version: packageJson.version,
-  copyright: `© ${currentYear}, Studio Admin.`,
+  name: "InvoiceGen",
+  copyright: `© ${currentYear}, InvoiceGen.`,
   meta: {
-    title: "Studio Admin - Modern TanStack Start Dashboard Starter Template",
+    title: "InvoiceGen — Buat & kelola invoice dengan mudah",
     description:
-      "Studio Admin is a modern, open-source dashboard starter template built with TanStack Start, Tailwind CSS v4, and shadcn/ui. Perfect for SaaS apps, admin panels, and internal tools—fully customizable and production-ready.",
+      "Aplikasi pembuatan dan manajemen invoice berbasis lokal. Buat invoice, kelola klien, atur profil perusahaan, dan unduh PDF — semua data tersimpan aman di browser Anda.",
   },
 };

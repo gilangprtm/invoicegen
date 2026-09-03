@@ -1,4 +1,5 @@
-import { Document, Page, pdf, Text, View } from "@react-pdf/renderer";
+import { Document, Image, Page, pdf, Text, View } from "@react-pdf/renderer";
+import type { Style } from "@react-pdf/types";
 
 import type { InvoiceFormValues } from "./data";
 import {
@@ -11,7 +12,7 @@ import {
   getLineAmount,
 } from "./data";
 
-const styles = {
+const styles: Record<string, Style> = {
   page: {
     width: 816,
     height: 1056,
@@ -29,6 +30,11 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 24,
+  },
+  logo: {
+    width: 56,
+    height: 56,
+    objectFit: "contain",
   },
   invoiceTitle: {
     fontSize: 24,
@@ -70,10 +76,6 @@ const styles = {
     fontSize: 9,
     marginBottom: 0,
   },
-  tableHeaderCol: (width: number) => ({
-    width,
-    textAlign: "right" as const,
-  }),
   tableHeaderDesc: {
     flex: 1,
   },
@@ -85,10 +87,6 @@ const styles = {
     borderBottomStyle: "solid",
     fontSize: 10,
   },
-  tableRowCol: (width: number) => ({
-    width,
-    textAlign: "right" as const,
-  }),
   tableRowDesc: {
     flex: 1,
   },
@@ -133,6 +131,8 @@ const styles = {
 };
 
 const COL_WIDTHS = { desc: 0, units: 90, unitCost: 160, lineTotal: 160 };
+const tableHeaderCol = (width: number) => ({ width, textAlign: "right" as const });
+const tableRowCol = (width: number) => ({ width, textAlign: "right" as const });
 
 function formatPdfCurrency(value: number, currency = "USD") {
   const localeMap: Record<string, string> = {
@@ -169,7 +169,11 @@ function InvoicePdfDoc({ invoice, currency = "USD" }: InvoicePdfDocProps) {
         <View style={styles.header}>
           {/* Top row: logo + title */}
           <View style={styles.topRow}>
-            <View>{/* Logo placeholder — skipped for PDF simplicity */}</View>
+            {invoice.from.logoUrl ? (
+              <Image src={invoice.from.logoUrl} style={styles.logo} />
+            ) : (
+              <View style={styles.logo} />
+            )}
             <Text style={styles.invoiceTitle}>Invoice</Text>
           </View>
 
@@ -212,18 +216,16 @@ function InvoicePdfDoc({ invoice, currency = "USD" }: InvoicePdfDocProps) {
         <View style={{ marginTop: 8 }}>
           <View style={styles.tableHeader}>
             <Text style={styles.tableHeaderDesc}>Description</Text>
-            <Text style={styles.tableHeaderCol(COL_WIDTHS.units)}>Units</Text>
-            <Text style={styles.tableHeaderCol(COL_WIDTHS.unitCost)}>Unit cost</Text>
-            <Text style={styles.tableHeaderCol(COL_WIDTHS.lineTotal)}>Line total</Text>
+            <Text style={tableHeaderCol(COL_WIDTHS.units)}>Units</Text>
+            <Text style={tableHeaderCol(COL_WIDTHS.unitCost)}>Unit cost</Text>
+            <Text style={tableHeaderCol(COL_WIDTHS.lineTotal)}>Line total</Text>
           </View>
           {getInvoiceItems(invoice).map((item) => (
             <View style={styles.tableRow} key={item.id}>
               <Text style={styles.tableRowDesc}>{item.description}</Text>
-              <Text style={styles.tableRowCol(COL_WIDTHS.units)}>{item.quantity}</Text>
-              <Text style={styles.tableRowCol(COL_WIDTHS.unitCost)}>{formatPdfCurrency(item.unitPrice, currency)}</Text>
-              <Text style={styles.tableRowCol(COL_WIDTHS.lineTotal)}>
-                {formatPdfCurrency(getLineAmount(item), currency)}
-              </Text>
+              <Text style={tableRowCol(COL_WIDTHS.units)}>{item.quantity}</Text>
+              <Text style={tableRowCol(COL_WIDTHS.unitCost)}>{formatPdfCurrency(item.unitPrice, currency)}</Text>
+              <Text style={tableRowCol(COL_WIDTHS.lineTotal)}>{formatPdfCurrency(getLineAmount(item), currency)}</Text>
             </View>
           ))}
         </View>
@@ -241,7 +243,9 @@ function InvoicePdfDoc({ invoice, currency = "USD" }: InvoicePdfDocProps) {
             </View>
             <View style={styles.totalLine}>
               <Text>
-                {taxOption.name} {taxOption.rate}%
+                {invoice.taxLabel || taxOption.name}{" "}
+                {/* biome-ignore lint/suspicious/noUnnecessaryConditions: taxRate may be undefined in older backups. */}
+                {invoice.taxRate ?? taxOption.rate}%
               </Text>
               <Text>{formatPdfCurrency(getInvoiceTax(invoice), currency)}</Text>
             </View>

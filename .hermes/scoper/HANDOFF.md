@@ -1,61 +1,92 @@
-# HANDOFF.md — InvoiceGen Invoice & Client Modules
+# InvoiceGen — Handoff (Cycle 3)
 
 ## Summary
 
-Scoper produced a complete specification and 18 phased tickets to make the Invoice module and Client management production-ready. Kanban and Calendar are out of scope.
+Cycle 3 mendefinisikan Dashboard InvoiceGen. Dashboard menjadi halaman utama `/dashboard`, membaca data dari local store, dan tidak mengubah data.
 
 ## Current Phase
 
-**Phase 0 — Foundation** (TASK-001 done; TASK-002 ready)
+Phase 3 — Dashboard.
 
-| Status | Task | Description |
-|--------|------|-------------|
-| `done` | TASK-001 | Add missing dependency `@tanstack/react-query` |
-| `done` | TASK-002 | Create `.env.example` with `DATABASE_URL` |
-| `done` | TASK-003 | Remove hardcoded DB fallback connection string |
-| `done` | TASK-004 | Remove Google social provider from Better Auth |
-| `done` | TASK-005 | Remove Google button from login/register UI |
+## Completed Work
 
-## Ready Tickets (can start now)
+- TASK-013 Dashboard route and navigation
+- TASK-014 Dashboard summary and status breakdown
+- TASK-015 Paid revenue six-month view
+- TASK-016 Recent invoices and clients
+- TASK-017 Dashboard quick actions and resilience
+- TASK-018 Dashboard verification
 
-- **TASK-006** — Fix `as any` cast in invoice list query (P2)
+## Verification Gap
 
-## Blocked Tickets (waiting on dependencies)
+TASK-012 Cycle 2 tetap Blocked karena `npm run check` gagal pada 91 baseline formatter diagnostics dan manual browser smoke test belum dilakukan. Dashboard build, focused Biome check, HTTP route check, dan unit test berhasil.
 
-Phase 0 chain: TASK-003 → TASK-004 → TASK-005  
-Phase 1: TASK-006/007/008 → TASK-009  
-Phase 2: TASK-010/011 → TASK-012 → TASK-013  
-Phase 3: TASK-014 → TASK-015 → TASK-016  
-Phase 4: TASK-017 → TASK-018
+## Locked Decisions
+
+- `/dashboard` menjadi halaman utama; tidak redirect ke invoice.
+- Revenue hanya menghitung invoice berstatus `paid`.
+- Revenue menampilkan enam bulan kalender terakhir, termasuk bulan bernilai nol.
+- Dashboard read-only.
+- Maksimal delapan invoice terbaru dan delapan client terbaru.
+- Semua data berasal dari local store. Tidak ada dummy data, API bisnis, cloud sync, atau analytics eksternal.
 
 ## Critical Risks
 
-| ID | Risk | Mitigation |
-|----|------|------------|
-| R1 | Invoice number race condition | Unique DB index + retry in `getNextInvoiceNumber` (TASK-010) |
-| R2 | PDF fidelity mismatch | Use `@react-pdf/renderer` mirroring `InvoicePaper` (TASK-012) |
-| R4 | Pre-existing lint/check noise | Fix all in Phase 1 before feature work (TASK-009) |
-| R5 | Missing env setup | `.env.example` + hard error in `src/db/index.ts` (TASK-002/003) |
+- Revenue salah bila status selain `paid` ikut dihitung. Mitigasi: filter status `paid` dan verifikasi dengan data campuran.
+- Dashboard menjadi template generik. Mitigasi: semua angka dari local store, empty state nyata, link dan aksi harus berfungsi.
+- Hydration mismatch. Mitigasi: ikuti pola hydration-safe store yang sudah dipakai aplikasi.
 
 ## Important Notes
 
-- **No code changes by Scoper** — codebase is untouched from discovery state.
-- Server functions, DB schema, routes, UI components already exist. Work is wiring, bug fixes, and small additions.
-- **Builder contract**: One ticket per session; only update `status`, `started_at`, `completed_at`, `progress_log`. Never modify requirement/description/acceptance/priority/dependencies/phase/scope.
-- If a ticket becomes blocked, set status `Blocked`, record reason, stop. Scoper handles replanning.
-
-## Files Delivered
-
-```
-.hermes/scoper/
-├── PROJECT.md      # Project overview, scope, tech stack
-├── SPEC.md         # 7 FR groups (F1–F7), NF, data model, API, acceptance
-├── TICKETS.md      # 18 tasks across 5 phases with deps
-├── DECISIONS.md    # 7 architectural decisions (D1–D7)
-├── RISKS.md        # 5 risks with mitigations
-└── HANDOFF.md      # This file
-```
+- Baca `.hermes/scoper/SPEC.md` bagian Cycle 3 sebelum implementasi.
+- Baca `.hermes/scoper/TICKETS.md` TASK-013..018.
+- Jangan mengubah requirement, priority, dependency, atau scope ticket.
+- Jangan menjalankan migration atau seed.
+- Jangan membaca/commit `.env`, `cookies*.txt`, `smoke.jar`.
+- Jangan push tanpa instruksi eksplisit.
 
 ## Next Step
 
-Builder picks up TASK-001 or TASK-002 (both `ready`). After completion, dependent tasks auto-promote.
+Dashboard Cycle 3 selesai diimplementasikan (TASK-013..018 Done). Verifikasi: `npm run build` sukses, `npm test` 4/4, HTTP `/dashboard` 200, focused Biome check bersih. `npm run check` penuh tetap gagal pada baseline formatter (CRLF/line-ending) yang sudah ada sejak Cycle 2, dan manual browser smoke test belum dilakukan. Laporkan gap ini secara jujur; jangan tandai Done tanpa bukti.
+
+## Files
+
+- `.hermes/scoper/PROJECT.md`
+- `.hermes/scoper/SPEC.md`
+- `.hermes/scoper/TICKETS.md`
+- `.hermes/scoper/DECISIONS.md`
+- `.hermes/scoper/RISKS.md`
+- `.hermes/scoper/HANDOFF.md`
+- `.hermes/scoper/CHANGELOG.md`
+
+---
+
+Cycle 2 history remains preserved in repository files and earlier ticket sections.
+
+---
+
+Cycle 3 dashboard scope is ready for Builder handoff.
+
+---
+
+No implementation has been performed by Scoper.
+
+---
+
+No deployment or remote write is authorized.
+
+---
+
+Follow the active specification, not old template routes.
+
+---
+
+Do not mark tickets Done without evidence.
+
+---
+
+Preserve the local-only promise.
+
+---
+
+Start TASK-013.

@@ -2,56 +2,25 @@
 
 import { useState } from "react";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
-import { Loader2, Send, Settings } from "lucide-react";
+import { Send } from "lucide-react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { CreateInvoiceInput } from "@/server/invoices";
-import { createInvoice } from "@/server/invoices";
-import { getProfile } from "@/server/profile";
+import { useInvoiceStore } from "@/stores/invoice-store";
 
 import {
-  defaultInvoiceValues,
   getDefaultValues,
+  getInvoiceDiscount,
   getInvoiceSubtotal,
   getInvoiceTax,
   getInvoiceTotal,
   type InvoiceFormValues,
-  invoiceTaxOptions,
 } from "./-components/data";
 import { InvoiceForm } from "./-components/invoice-form";
 import { InvoicePreview } from "./-components/invoice-preview";
-
-function mapFormValuesToCreateInput(values: InvoiceFormValues, currency: string): CreateInvoiceInput {
-  const subtotal = getInvoiceSubtotal(values);
-  const tax = getInvoiceTax(values);
-  const total = getInvoiceTotal(values);
-  const taxOption = invoiceTaxOptions.find((t) => t.id === values.taxId);
-
-  return {
-    clientId: values.to.id,
-    currency,
-    subtotal: String(subtotal),
-    taxRate: String(taxOption?.rate ?? 0),
-    taxAmount: String(tax),
-    total: String(total),
-    status: "sent",
-    note: null,
-    issuedDate: values.issuedDate,
-    dueDate: values.paymentDueDate,
-    items: values.items.map((item) => ({
-      name: item.description,
-      quantity: String(item.quantity),
-      price: String(item.unitPrice),
-      total: String(item.quantity * item.unitPrice),
-    })),
-  };
-}
 
 export const Route = createFileRoute("/(main)/dashboard/invoice/new")({
   component: InvoiceCreatePage,
@@ -61,75 +30,59 @@ function InvoiceCreatePage() {
   const navigate = useNavigate();
   const [currency, setCurrency] = useState("IDR");
 
-  const { data: profile, isLoading } = useQuery({
-    queryKey: ["user-profile"],
-    queryFn: () => getProfile(),
-  });
-
-  const defaults = profile ? getDefaultValues(profile) : defaultInvoiceValues;
+  const profile = useInvoiceStore((state) => state.profile);
+  const clients = useInvoiceStore((state) => state.clients);
+  const addInvoice = useInvoiceStore((state) => state.addInvoice);
+  const defaults = getDefaultValues(profile);
 
   const form = useForm<InvoiceFormValues>({
     defaultValues: defaults,
   });
   const invoice = useWatch({ control: form.control }) as InvoiceFormValues;
 
-  const createMutation = useMutation({
-    mutationFn: async (values: InvoiceFormValues) => {
-      const input = mapFormValuesToCreateInput(values, currency);
-      return createInvoice({ data: input });
-    },
-    onSuccess: async (result) => {
-      toast.success("Invoice created", {
-        description: `Invoice ${result.number} has been created.`,
-      });
-      await navigate({ to: "/dashboard/invoice" });
-    },
-    onError: (err) => {
-      toast.error("Failed to create invoice", { description: err.message });
-    },
-  });
+  const saveInvoice = (values: InvoiceFormValues) => {
+    const subtotal = getInvoiceSubtotal(values);
+    const taxAmount = getInvoiceTax(values);
+    const client = clients.find((item) => item.id === values.to.id);
+    addInvoice({
+      clientId: values.to.id,
+      currency,
+      subtotal,
+      taxRate: Math.min(Math.max(values.taxRate, 0), 100),
+      taxLabel: values.taxLabel,
+      discountType: values.discountType,
+      discountValue: Math.max(values.discountValue || 0, 0),
+      discountAmount: getInvoiceDiscount(values),
+      taxAmount,
+      total: getInvoiceTotal(values),
+      status: "sent",
+      note: "",
+      issuedDate: values.issuedDate,
+      dueDate: values.paymentDueDate,
+      items: values.items.map((item) => ({
+        id: item.id,
+        name: item.description,
+        quantity: item.quantity,
+        price: item.unitPrice,
+        total: item.quantity * item.unitPrice,
+      })),
+    });
+    toast.success("Invoice created", { description: `Invoice for ${client?.name ?? values.to.name} saved locally.` });
+    void navigate({ to: "/dashboard/invoice" });
+  };
 
   const hasCompany = profile && (profile.companyName || profile.email);
-  const hasClient = invoice.to?.id && invoice.to.id.length > 0;
-  const hasValidItems = invoice.items?.some((item) => item.description && item.quantity > 0 && item.unitPrice > 0);
-  const canSend = hasClient && hasValidItems && !createMutation.isPending;
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  const hasClient = invoice.to.id && invoice.to.id.length > 0;
+  const hasValidItems = invoice.items.some((item) => item.description && item.quantity > 0 && item.unitPrice > 0);
+  const canSend = Boolean(hasClient && hasValidItems);
 
   if (!hasCompany) {
-    return (
-      <div className="flex min-h-[60vh] items-start justify-center pt-20">
-        <Card className="w-full max-w-md text-center">
-          <CardHeader>
-            <CardTitle>Company Profile Required</CardTitle>
-            <CardDescription>
-              You need to set up your company profile before creating invoices. This information appears on your
-              invoices as the sender.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-4">
-            <p className="text-muted-foreground text-sm">Go to Settings → Company to fill in your business details.</p>
-            <Link to="/dashboard/settings">
-              <Button>
-                <Settings className="mr-2 size-4" />
-                Go to Settings
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    toast.info("Company profile is incomplete", { id: "profile-guidance" });
   }
 
   const handleSendInvoice = () => {
     const values = form.getValues();
-    createMutation.mutate(values);
+    saveInvoice(values);
   };
 
   return (
@@ -152,7 +105,7 @@ function InvoiceCreatePage() {
         <div className="flex flex-wrap items-center gap-3">
           <Button type="button" disabled={!canSend} onClick={handleSendInvoice}>
             <Send data-icon="inline-start" />
-            {createMutation.isPending ? "Sending..." : "Send Invoice"}
+            Send Invoice
           </Button>
         </div>
       </div>

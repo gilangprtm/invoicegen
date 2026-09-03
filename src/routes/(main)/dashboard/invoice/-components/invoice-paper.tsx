@@ -106,7 +106,9 @@ export function InvoicePaper({ invoice, currency = "USD" }: { invoice: InvoiceFo
               </div>
               <div className="flex justify-between gap-8">
                 <span>
-                  {taxOption.name} {taxOption.rate}%
+                  {invoice.taxLabel || taxOption.name}{" "}
+                  {/* biome-ignore lint/suspicious/noUnnecessaryConditions: taxRate may be undefined in older backups. */}
+                  {invoice.taxRate ?? taxOption.rate}%
                 </span>
                 <span>{formatInvoiceCurrency(getInvoiceTax(invoice), currency)}</span>
               </div>
