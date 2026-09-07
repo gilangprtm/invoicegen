@@ -27,9 +27,9 @@ export function InvoicePaper({ invoice, currency = "USD" }: { invoice: InvoiceFo
       <header className="flex flex-col gap-10">
         <div className="grid grid-cols-2 items-start gap-14">
           {invoice.from.logoUrl ? (
-            <img src={invoice.from.logoUrl} alt="Company logo" className="size-14 rounded-md object-contain" />
+            <img src={invoice.from.logoUrl} alt="Company logo" className="size-20 rounded-md object-contain" />
           ) : (
-            <svg className="size-12" viewBox="0 0 48 48" aria-hidden="true">
+            <svg className="size-16" viewBox="0 0 48 48" aria-hidden="true">
               <rect width="20" height="20" rx="3" fill="currentColor" />
               <rect x="28" width="20" height="20" rx="3" fill="currentColor" />
               <rect y="28" width="20" height="20" rx="3" fill="currentColor" />

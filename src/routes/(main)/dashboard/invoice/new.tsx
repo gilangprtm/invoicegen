@@ -45,6 +45,7 @@ function InvoiceCreatePage() {
     const taxAmount = getInvoiceTax(values);
     const client = clients.find((item) => item.id === values.to.id);
     addInvoice({
+      number: values.referenceNumber.trim(),
       clientId: values.to.id,
       currency,
       subtotal,

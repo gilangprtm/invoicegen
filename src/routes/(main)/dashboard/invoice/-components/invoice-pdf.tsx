@@ -32,8 +32,8 @@ const styles: Record<string, Style> = {
     marginBottom: 24,
   },
   logo: {
-    width: 56,
-    height: 56,
+    width: 120,
+    height: 120,
     objectFit: "contain",
   },
   invoiceTitle: {

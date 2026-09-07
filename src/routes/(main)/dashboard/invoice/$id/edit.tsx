@@ -96,6 +96,7 @@ function InvoiceEditPage() {
     const values = form.getValues();
     const taxRate = Math.min(Math.max(Number(values.taxRate) || 0, 0), 100);
     updateInvoice(id, {
+      number: values.referenceNumber.trim(),
       clientId: values.to.id,
       currency,
       subtotal: getInvoiceSubtotal(values),
