@@ -1,7 +1,7 @@
 {
-  "short_name": "Studio Admin",
-  "name": "Studio Admin - TanStack Start Dashboard",
-  "description": "A modern, customizable admin dashboard template built with TanStack Start and shadcn/ui.",
+  "short_name": "InvoiceGen",
+  "name": "InvoiceGen: Local Invoice Workspace",
+  "description": "Local-first invoice app for creating and managing invoices in the browser.",
   "icons": [
     {
       "src": "favicon.ico",

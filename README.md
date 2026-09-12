@@ -1,22 +1,22 @@
 # InvoiceGen
 
-Aplikasi web untuk membuat dan mengelola **invoice** sepenuhnya di sisi client (local-first). Buat invoice, kelola klien, konfigurasi profil perusahaan, dan unduh PDF invoice — semua data tersimpan di `localStorage` browser Anda. Tidak ada server, database, atau akun.
+Aplikasi web untuk membuat dan mengelola **invoice** sepenuhnya di sisi client (local-first). Buat invoice, kelola klien, konfigurasi profil perusahaan, dan unduh PDF invoice. Semua data tersimpan di `localStorage` browser Anda. Tidak ada server, database, atau akun.
 
 ## Fitur
 
-- **Dashboard** — ringkasan: total dibayar, total belum dibayar, counts per status, revenue 6 bulan terakhir, invoice terbaru, dan klien terbaru.
+- **Dashboard**: ringkasan total dibayar, total belum dibayar, jumlah per status, revenue 6 bulan terakhir, invoice terbaru, dan klien terbaru.
 - **Invoice (CRUD)**
   - Buat, edit, hapus, dan lihat invoice.
   - Status workflow: `draft → sent → paid` (dengan `overdue` saat jatuh tempo).
   - Item baris dengan quantity, harga satuan, sub-total, diskon, dan pajak / VAT.
   - Penomoran otomatis `INV-<tahun>-<seq>` (contoh `INV-2026-001`).
   - Preview, print, dan unduh **PDF**.
-- **Klien (CRUD)** — data kontak klien (nama, email, telepon, alamat).
+- **Klien (CRUD)**: data kontak klien (nama, email, telepon, alamat).
 - **Pengaturan**
   - **Company Profile**: nama perusahaan, email, telepon, website, alamat, tax ID, akun pembayaran, issuer, dan **logo** (PNG/JPG/SVG/WebP, maks. 512 KB).
   - **Preferensi tampilan**: tema terang/gelap/sistem, preset tema, font, layout konten, sidebar, dsb.
   - **Backup**: export & import JSON untuk memindahkan data antar perangkat.
-- **100% lokal** — tanpa backend; semua data disimpan rapi di browser.
+- **100% lokal**: tanpa backend; semua data disimpan rapi di browser.
 
 ## Tech Stack
 
@@ -72,4 +72,4 @@ Aplikasi berjalan di http://localhost:3000.
 
 ## Lisensi
 
-MIT — lihat file [LICENSE](LICENSE).
+MIT. Lihat file [LICENSE](LICENSE).

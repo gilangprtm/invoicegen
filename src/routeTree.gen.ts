@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as mainRouteRouteImport } from './routes/(main)/route'
 import { Route as mainDashboardRouteRouteImport } from './routes/(main)/dashboard/route'
 import { Route as mainDashboardIndexRouteImport } from './routes/(main)/dashboard/index'
@@ -23,6 +24,11 @@ import { Route as mainDashboardInvoiceNewRouteImport } from './routes/(main)/das
 import { Route as mainDashboardClientsIdEditRouteImport } from './routes/(main)/dashboard/clients/$id/edit'
 import { Route as mainDashboardInvoiceIdEditRouteImport } from './routes/(main)/dashboard/invoice/$id/edit'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const mainRouteRoute = mainRouteRouteImport.update({
   id: '/(main)',
   getParentRoute: () => rootRouteImport,
@@ -96,6 +102,7 @@ const mainDashboardInvoiceIdEditRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/dashboard': typeof mainDashboardRouteRouteWithChildren
   '/dashboard/clients': typeof mainDashboardClientsRouteRouteWithChildren
   '/dashboard/invoice': typeof mainDashboardInvoiceRouteRouteWithChildren
@@ -110,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/invoice/$id/edit': typeof mainDashboardInvoiceIdEditRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/dashboard/settings': typeof mainDashboardSettingsRouteRoute
   '/dashboard': typeof mainDashboardIndexRoute
   '/dashboard/clients/new': typeof mainDashboardClientsNewRoute
@@ -122,6 +130,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/(main)': typeof mainRouteRouteWithChildren
   '/(main)/dashboard': typeof mainDashboardRouteRouteWithChildren
   '/(main)/dashboard/clients': typeof mainDashboardClientsRouteRouteWithChildren
@@ -139,6 +148,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/dashboard'
     | '/dashboard/clients'
     | '/dashboard/invoice'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/dashboard/invoice/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/dashboard/settings'
     | '/dashboard'
     | '/dashboard/clients/new'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/dashboard/invoice/$id/edit'
   id:
     | '__root__'
+    | '/'
     | '/(main)'
     | '/(main)/dashboard'
     | '/(main)/dashboard/clients'
@@ -180,11 +192,19 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   mainRouteRoute: typeof mainRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(main)': {
       id: '/(main)'
       path: ''
@@ -359,6 +379,7 @@ const mainRouteRouteWithChildren = mainRouteRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   mainRouteRoute: mainRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport

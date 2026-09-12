@@ -39,7 +39,7 @@ export function InvoicePreview({ invoice, currency = "USD" }: { invoice: Invoice
       document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
     } catch {
-      // PDF generation failed silently — user can retry
+      // PDF generation failed silently; user can retry
     } finally {
       setIsDownloading(false);
     }

@@ -8,6 +8,10 @@ import { defineConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 const config = defineConfig({
+  server: {
+    host: "0.0.0.0",
+    allowedHosts: true,
+  },
   resolve: {
     tsconfigPaths: true,
     alias: {

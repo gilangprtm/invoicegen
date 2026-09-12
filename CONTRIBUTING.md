@@ -1,138 +1,90 @@
-# Contributing to Studio Admin
+# Contributing to InvoiceGen
 
-Thanks for showing interest in improving **Studio Admin** (repo: `tanstack-shadcn-admin-dashboard`).
-This guide will help you set up your environment and understand how to contribute.
-
----
+Panduan kontribusi untuk **InvoiceGen**. Aplikasi local-first untuk mengelola invoice sepenuhnya di browser.
 
 ## Overview
 
-This project is built with **TanStack Start**, **React 19**, **TypeScript**, **Tailwind CSS v4**, and **Shadcn UI**.
-The goal is to keep the codebase modular, scalable, and easy to extend.
-
----
+InvoiceGen dibangun dengan TanStack Start, React 19, TypeScript, Tailwind CSS v4, dan shadcn/ui. Data disimpan di local storage browser melalui Zustand. Tidak ada server, database, autentikasi, atau sinkronisasi cloud dalam produk.
 
 ## Project Layout
 
-We use a **colocation-based file system**. Each feature keeps its own routes, components, and logic.
-
-```text
+```
 src
 ├── routes                  # TanStack Router routes
-│   ├── (external)          # External routes
-│   ├── (main)              # Main application routes
-│   │   ├── auth            # Auth layouts and screens
-│   │   ├── chat            # Chat screen
-│   │   ├── mail            # Mail screen
-│   │   └── dashboard       # Dashboard layout and screens
-│   └── __root.tsx          # Root document and providers
-├── components              # Shared components
+│   ├── (main)
+│   │   └── dashboard       # Dashboard workspace, invoice, clients, settings
+│   └── __root.tsx          # Root document dan provider
+├── components              # Shared UI dari shadcn/base-nova
 ├── hooks                   # Reusable hooks
-├── lib                     # Configuration and utilities
-├── navigation              # Sidebar navigation
-├── server                  # Server functions
-├── stores                  # Global stores
-└── styles                  # Tailwind and theme setup
+├── lib                     # Utilitas domain, preferences, format
+├── navigation              # Definisi navigasi sidebar
+├── stores                  # Zustand store (invoice, preferences)
+└── styles                  # Tailwind dan theme preset
 ```
 
-Files and folders prefixed with `-`, such as `-components`, are excluded from route generation and can be colocated with their route.
-
----
+File atau direktori dengan awalan `-`, seperti `-components`, tidak digenerate menjadi route dan dapat dikolokasikan dengan route pembuatnya.
 
 ## Getting Started
 
-### Fork and Clone the Repository
+### Clone
 
-1. Fork the Repository
+```bash
+git clone https://github.com/gilangprtm/invoicegen.git
+cd invoicegen
+```
 
-   [Fork the repository](https://github.com/arhamkhnz/tanstack-shadcn-admin-dashboard/fork).
+### Install dan run
 
-2. Clone the Repository
+```bash
+npm install
+npm run dev
+```
 
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/tanstack-shadcn-admin-dashboard.git
-   ```
-
-3. Navigate into the Project
-
-   ```bash
-   cd tanstack-shadcn-admin-dashboard
-   ```
-
-4. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-5. Run the development server
-
-   ```bash
-   npm run dev
-   ```
-
-   The app will be available at [http://localhost:3000](http://localhost:3000).
-
----
+Aplikasi tersedia di `http://localhost:3000`.
 
 ## Contribution Flow
 
-- Always create a new branch before working on changes:
+- Buat branch baru:
 
-  ```bash
-  git checkout -b feature/my-update
-  ```
+```bash
+git checkout -b feat/my-update
+```
 
-- Use clear commit messages:
+- Tulis commit yang jelas:
 
-  ```bash
-  git commit -m "feat: add finance dashboard screen"
-  ```
+```bash
+git commit -m "feat: add invoice filter"
+```
 
-- Open a pull request once ready.
-- Include a screenshot in the pull request when adding or changing a UI screen.
-
----
+- Buka pull request setelah siap.
+- Sertakan screenshot untuk perubahan UI yang material dan catat perilaku light/dark serta mobile jika relevan.
 
 ## Where to Contribute
 
-- **External Routes:** Non-dashboard routes → `src/routes/(external)/`
-- **Auth Screens:** Login, register, and authentication layouts → `src/routes/(main)/auth/`
-- **Dashboard Screens:** CRM, Finance, Analytics, and other dashboards → `src/routes/(main)/dashboard/`
-- **Components:** Reusable UI → `src/components/`
-- **Hooks:** Shared logic → `src/hooks/`
-- **Server Functions:** Server-side operations → `src/server/`
-- **Themes:** New presets → `src/styles/presets/`
-
----
+- **Dashboard dan fitur**: `src/routes/(main)/dashboard/`
+- **Komponen UI**: `src/components/` dan `src/components/ui/`
+- **Logika dan utilitas**: `src/hooks/`, `src/lib/`
+- **Navigasi**: `src/navigation/`
+- **Store**: `src/stores/`
+- **Theme**: `src/styles/presets/`
 
 ## Guidelines
 
-- Prefer **TypeScript types** over `any`.
-- Keep feature components in the route's `-components` folder.
-- Do not manually edit `src/routeTree.gen.ts`.
-- Husky pre-commit hooks are enabled. Theme presets are generated and staged files are checked automatically.
-- Follow **Shadcn UI**, Base UI, and Tailwind CSS v4 conventions.
-- Keep accessibility in mind, including ARIA labels and keyboard navigation.
-- Use clear commit messages with conventional prefixes such as `feat:`, `fix:`, and `chore:`.
-- Avoid unnecessary dependencies and prefer existing utilities.
-
----
+- Gunakan type yang presisi dan hindari `any`.
+- Tetap gunakan alias import `@/`.
+- Simpan komponen spesifik fitur di dalam direktori `-components` milik route.
+- Jangan edit `src/routeTree.gen.ts` secara manual.
+- Gunakan theme token semantik yang ada, bukan warna acak.
+- Seluruh angka dashboard harus berasal dari local store. Jangan menambahkan data contoh.
+- Tetap aksesibel dengan dialog yang dapat ditutup Escape, status keyboard, dan label yang jelas.
+- Untuk pekerjaan visual, baca `DESIGN.md` lebih dulu dan terapkan antislop sebagai filter.
+- Jangan menambah backend, database, autentikasi, atau analitik pihak ketiga tanpa persetujuan pemilik.
 
 ## Submitting PRs
 
-- Open a pull request once your changes are ready.
-- Ensure your branch is up to date with `main` before submitting.
-- Reference any related issue in your pull request for context.
+- Pastikan branch terbaru terhadap `main` sebelum submit.
+- Tautkan issue terkait jika ada.
 
----
+## Questions and Support
 
-## Questions & Support
-
-Report bugs, suggestions, or issues through [GitHub Issues](https://github.com/arhamkhnz/tanstack-shadcn-admin-dashboard/issues).
-
----
-
-Your contributions keep this project growing. 🚀
-
-**Happy Vibe Coding!**
+Laporkan bug, saran, atau issue melalui GitHub Issues milik repository ini.

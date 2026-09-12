@@ -193,6 +193,17 @@
   }
 }
 
+.landing-dot-grid {
+  background-image: radial-gradient(circle at 1px 1px, oklch(0.82 0 0 / 0.72) 1.2px, transparent 1.3px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 82% 68% at 50% 42%, black 24%, transparent 90%);
+  -webkit-mask-image: radial-gradient(ellipse 82% 68% at 50% 42%, black 24%, transparent 90%);
+}
+
+.dark .landing-dot-grid {
+  background-image: radial-gradient(circle at 1px 1px, oklch(0.68 0 0 / 0.72) 1.2px, transparent 1.3px);
+}
+
 .disable-transitions * {
   transition: none !important;
 }
